@@ -10,7 +10,7 @@ QRZ.COMの QRZ XML Logbook Data Subscription に加入する必要がありま�
 
 また、QRZCQ.COMからも情報を取得できます。こちらはPremium会員の資格が必要です。  
 
-## Used with Win-Test 
+## Use with Win-Test 
 
 Win-Testに入力されたコールサインを取得して自動的に照会することも可能です。  
 デスクトップの拡大縮小100%、Win-TestのFontサイズがMediumの場合のみ連携可能です。  
