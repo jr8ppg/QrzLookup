@@ -3,10 +3,10 @@ object Form1: TForm1
   Top = 0
   Caption = 'QRZ.COM Lookup Tool'
   ClientHeight = 162
-  ClientWidth = 671
+  ClientWidth = 724
   Color = clBtnFace
   Constraints.MinHeight = 150
-  Constraints.MinWidth = 500
+  Constraints.MinWidth = 740
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
@@ -24,36 +24,36 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 671
+    Width = 724
     Height = 41
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     object Label1: TLabel
-      Left = 112
+      Left = 100
       Top = 13
       Width = 48
       Height = 15
       Caption = 'Callsign'
     end
     object Label2: TLabel
-      Left = 492
+      Left = 580
       Top = 13
-      Width = 83
+      Width = 46
       Height = 15
-      Caption = 'Scan interval'
+      Caption = 'interval'
     end
     object Label3: TLabel
-      Left = 643
+      Left = 699
       Top = 13
       Width = 18
       Height = 15
       Caption = 'ms'
     end
     object editCallsign: TEdit
-      Left = 166
+      Left = 154
       Top = 10
-      Width = 123
+      Width = 105
       Height = 23
       CharCase = ecUpperCase
       Font.Charset = DEFAULT_CHARSET
@@ -68,9 +68,9 @@ object Form1: TForm1
       OnExit = editCallsignExit
     end
     object buttonQuery: TButton
-      Left = 295
+      Left = 261
       Top = 10
-      Width = 73
+      Width = 62
       Height = 23
       Caption = 'Lookup'
       TabOrder = 2
@@ -86,25 +86,16 @@ object Form1: TForm1
       TabOrder = 0
       OnClick = ToggleSwitch1Click
     end
-    object checkUseWt: TCheckBox
-      Left = 373
-      Top = 13
-      Width = 105
-      Height = 17
-      Caption = 'With WinTest'
-      TabOrder = 3
-      OnClick = checkUseWtClick
-    end
     object editInterval: TEdit
-      Left = 576
+      Left = 632
       Top = 10
       Width = 45
       Height = 23
-      TabOrder = 4
+      TabOrder = 3
       Text = '500'
     end
     object updownInterval: TUpDown
-      Left = 621
+      Left = 677
       Top = 10
       Width = 16
       Height = 23
@@ -113,14 +104,82 @@ object Form1: TForm1
       Max = 3000
       Increment = 20
       Position = 500
-      TabOrder = 5
+      TabOrder = 4
       OnClick = updownIntervalClick
+    end
+    object Panel2: TPanel
+      Left = 334
+      Top = 10
+      Width = 238
+      Height = 25
+      BevelOuter = bvLowered
+      TabOrder = 5
+      object radioLoggerLink0: TRadioButton
+        Left = 8
+        Top = 7
+        Width = 42
+        Height = 13
+        Caption = 'None'
+        Checked = True
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        TabStop = True
+      end
+      object radioLoggerLink1: TRadioButton
+        Left = 56
+        Top = 8
+        Width = 69
+        Height = 13
+        Caption = 'Win-Test'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 1
+      end
+      object radioLoggerLink2: TRadioButton
+        Left = 127
+        Top = 8
+        Width = 44
+        Height = 13
+        Caption = 'zLog'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 2
+        OnClick = radioLoggerLink2Click
+      end
+      object radioLoggerLink3: TRadioButton
+        Left = 175
+        Top = 8
+        Width = 58
+        Height = 13
+        Caption = 'N1MM+'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 3
+        OnClick = radioLoggerLink3Click
+      end
     end
   end
   object StatusBar1: TStatusBar
     Left = 0
     Top = 143
-    Width = 671
+    Width = 724
     Height = 19
     Panels = <
       item
@@ -143,7 +202,7 @@ object Form1: TForm1
   object StringGrid1: TStringGrid
     Left = 0
     Top = 41
-    Width = 671
+    Width = 724
     Height = 102
     Align = alClient
     FixedCols = 0

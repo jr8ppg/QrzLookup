@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.IniFiles, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, System.Math,
   Vcl.ExtCtrls, Vcl.StdCtrls, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc,
-  Vcl.WinXCtrls, WtUtils, Dxcc, Vcl.Grids, JclDebug, Check,
+  Vcl.WinXCtrls, WtUtils, Dxcc, Vcl.Grids, JclDebug,
   System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent;
 
 type
@@ -19,13 +19,17 @@ type
     StatusBar1: TStatusBar;
     ToggleSwitch1: TToggleSwitch;
     StringGrid1: TStringGrid;
-    checkUseWt: TCheckBox;
     Label2: TLabel;
     editInterval: TEdit;
     updownInterval: TUpDown;
     Label3: TLabel;
     NetHTTPClient1: TNetHTTPClient;
     NetHTTPRequest1: TNetHTTPRequest;
+    Panel2: TPanel;
+    radioLoggerLink0: TRadioButton;
+    radioLoggerLink1: TRadioButton;
+    radioLoggerLink2: TRadioButton;
+    radioLoggerLink3: TRadioButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -49,6 +53,8 @@ type
       const AError: string);
     procedure NetHTTPRequest1RequestException(const Sender: TObject;
       const AError: Exception);
+    procedure radioLoggerLink2Click(Sender: TObject);
+    procedure radioLoggerLink3Click(Sender: TObject);
   private
     { Private 宣言 }
     FWtUtils: TWtUtils;
@@ -57,19 +63,29 @@ type
     FDxccList: TDxccList;
     FLogFileName: string;
     FQueryNow: Boolean;
-    FCheckWindow: TformCheck;
     FSite: Integer;
     FLastQueryTickCount: DWORD;
     FKeepAliveMinute: DWORD;
+
+    m_zLogV28: Boolean;
+    FZLogLoggerWnd: HWND;
+    FN1mmLoggerWnd: HWND;
+
     function QrzComLogin(strUserID, strPassword: string; var strResult: string): Boolean;
     function QueryOneStation(strSessionKey: string; strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean;
     function GetXmlNode(start_node: IXMLNode; tagname: string; name: string): IXMLNode;
     procedure SetEnable(fEnable: Boolean);
     procedure ClearInfo();
     function GetCallsign(strCallsign: string): string;
+    function FindZlogWindow(): HWND;
+    function FindN1mmWindow(): HWND;
+    function Find_zLog(): HWND;
+    function Find_n1mm(): HWND;
   public
     { Public 宣言 }
-    procedure GoLookup();
+    procedure GoWtLookup();
+    procedure GoZlogLookup();
+    procedure GoN1mmLookup();
     procedure LogWrite(msg: string);
   end;
 
@@ -79,6 +95,9 @@ var
 implementation
 
 {$R *.dfm}
+
+uses
+  SelectZlog;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
@@ -90,8 +109,6 @@ begin
    FDxccList := TDxccList.Create();
    FDxccList.LoadFromResourceName(SysInit.HInstance, 'ID_DXCCLIST');
    FQueryNow := False;
-
-   FCheckWindow := TformCheck.Create(Self);
 
    FLogFileName := ExtractFilePath(Application.ExeName) +
                    ChangeFileExt(ExtractFileName(Application.ExeName), '') + '_' + FormatDateTime('yyyymmdd', Now) + '.log';
@@ -110,19 +127,6 @@ begin
       end
       else begin
          Position := poDefaultPosOnly;
-      end;
-
-      x := ini.ReadInteger('CheckWindow', 'X', -1);
-      y := ini.ReadInteger('CheckWindow', 'Y', -1);
-      if (x > -1) and (y > -1) then begin
-         FCheckWindow.Left := x;
-         FCheckWindow.Top := y;
-         Position := poDesigned;
-      end
-      else begin
-         FCheckWindow.Left := Left + Width + 1;
-         FCheckWindow.Top := Top;
-         Position := poDesigned;
       end;
 
       n := ini.ReadInteger('SETTINGS', 'ScanInterval', 500);
@@ -180,13 +184,9 @@ begin
       ini.WriteInteger('SETTINGS', 'Y', Top);
       ini.WriteInteger('SETTINGS', 'ScanInterval', updownInterval.Position);
 
-      ini.WriteInteger('CheckWindow', 'X', FCheckWindow.Left);
-      ini.WriteInteger('CheckWindow', 'Y', FCheckWindow.Top);
    finally
       ini.Free();
    end;
-
-   FCheckWindow.Release();
 end;
 
 procedure TForm1.FormResize(Sender: TObject);
@@ -321,19 +321,25 @@ begin
    timerWtCheck.Enabled := False;
    try
    try
-      if FWtUtils.IsWtPresent() = False then begin
-         checkUseWt.Visible := False;
-         Exit;
-      end
-      else begin
-         checkUseWt.Visible := True;
+      // Win-Test
+      if radioLoggerLink1.Checked = True then begin
+         if FWtUtils.IsWtPresent() = False then begin
+            radioLoggerLink0.Checked := True;
+            Exit;
+         end;
+
+         GoWtLookup();
       end;
 
-      if checkUseWt.Checked = False then begin
-         Exit;
+      // zLog
+      if (radioLoggerLink2.Checked = True) and (FZlogLoggerWnd <> 0) then begin
+         GoZlogLookup();
       end;
 
-      GoLookup();
+      // N1MM+
+      if (radioLoggerLink3.Checked = True) and (FN1mmLoggerWnd <> 0) then begin
+         GoN1mmLookup();
+      end;
    except
       on E: Exception do begin
          LogWrite('*** Exception in timerWtCheckTimer() ***');
@@ -384,7 +390,7 @@ begin
          ClearInfo();
          FQrzComSessionKey := '';
          SetEnable(False);
-         checkUseWt.Checked := False;
+         radioLoggerLink0.Checked := True;
       end;
    except
       on E: Exception do begin
@@ -573,6 +579,22 @@ begin
    end;
 end;
 
+procedure TForm1.radioLoggerLink2Click(Sender: TObject);
+begin
+   FZLogLoggerWnd := Find_zlog();
+   if FZLogLoggerWnd = 0 then begin
+      radioLoggerLink0.Checked := True;
+   end;
+end;
+
+procedure TForm1.radioLoggerLink3Click(Sender: TObject);
+begin
+   FN1mmLoggerWnd := Find_n1mm();
+   if FN1mmLoggerWnd = 0 then begin
+      radioLoggerLink0.Checked := True;
+   end;
+end;
+
 function TForm1.GetXmlNode(start_node: IXMLNode; tagname: string; name: string): IXMLNode;
 var
    i: integer;
@@ -624,11 +646,14 @@ begin
    editCallsign.Enabled := fEnable;
    buttonQuery.Enabled := fEnable;
    StringGrid1.Enabled := fEnable;
-   checkUseWt.Enabled := fEnable;
+   radioLoggerLink0.Enabled := fEnable;
+   radioLoggerLink1.Enabled := fEnable;
+   radioLoggerLink2.Enabled := fEnable;
+   radioLoggerLink3.Enabled := fEnable;
    editInterval.Enabled := fEnable;
    updownInterval.Enabled := fEnable;
-   FCheckWindow.Visible := fEnable;
 end;
+
 procedure TForm1.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
@@ -709,7 +734,7 @@ begin
    end;
 end;
 
-procedure TForm1.GoLookup();
+procedure TForm1.GoWtLookup();
 var
    strCallsign: string;
    strCountry, strCQZone, strITUZone, strState: string;
@@ -737,7 +762,113 @@ begin
          strCountry := '';
          strCQZone := '';
          strITUZone := '';
-//         QueryOneStation(FQrzComSessionKey, 'JR8PPG', strCountry, strCQZone, strITUZone, strState);
+         FLastQueryTickCount := GetTickCount();
+      end;
+   end;
+end;
+
+procedure TForm1.GoZlogLookup();
+var
+   szWindowText: array[0..1024] of Char;
+   nLen: Integer;
+   strText: string;
+   strCallsign: string;
+   strCountry, strCQZone, strITUZone, strState: string;
+   callsign_atom: ATOM;
+begin
+   try
+      ZeroMemory(@szWindowText, SizeOf(szWindowText));
+
+      if m_zLogV28 = True then begin
+         nLen := SendMessage(FZlogLoggerWnd, (WM_USER + 200), 0, 0);
+         callsign_atom := LOWORD(nLen);
+         if callsign_atom = 0 then begin
+            Exit;
+         end;
+
+         nLen := GlobalGetAtomName(callsign_atom, PChar(@szWindowText), SizeOf(szWindowText));
+         if (nLen = 0) then begin
+            Exit;
+         end;
+
+         GlobalDeleteAtom(callsign_atom);
+      end
+      else begin
+         nLen := SendMessage(FZlogLoggerWnd, WM_GETTEXT, SizeOf(szWindowText), LPARAM(PChar(@szWindowText)));
+      end;
+
+      strCallsign := szWindowText;
+
+      strCallsign := GetCallsign(strCallsign);
+
+      if editCallsign.Text <> strCallsign then begin
+         editCallsign.Text := strCallsign;
+
+         if strCallsign = '' then begin
+            Exit;
+         end;
+
+         buttonQueryClick(nil);
+
+         FLastQueryTickCount := GetTickCount();
+      end;
+   finally
+      // keep alive
+      if (FKeepAliveMinute > 0) and
+         ((GetTickCount() - FLastQueryTickCount) > (FKeepAliveMinute {min} * 60 {sec} * 1000 {msec})) then begin
+         strCountry := '';
+         strCQZone := '';
+         strITUZone := '';
+         FLastQueryTickCount := GetTickCount();
+      end;
+   end;
+end;
+
+procedure TForm1.GoN1mmLookup();
+var
+   szWindowText: array[0..100] of Char;
+   strText: WideString;
+   strCallsign: string;
+   strCountry, strCQZone, strITUZone, strState: string;
+   nLen: Integer;
+   dwError: DWORD;
+begin
+   try
+      ZeroMemory(@szWindowText, SizeOf(szWindowText));
+      nLen := SendMessage(FN1mmLoggerWnd, WM_GETTEXTLENGTH, 0, 0);
+      if nLen = 0 then begin
+         Exit;
+      end;
+
+      nLen := SendMessage(FN1mmLoggerWnd, WM_GETTEXT, SizeOf(szWindowText), LPARAM(PChar(@szWindowText)));
+      if nLen = 0 then begin
+         dwError := GetLastError();
+         Exit;
+      end;
+
+      strText := PChar(@szWindowText);
+      strCallsign := strText;
+
+      strCallsign := GetCallsign(strCallsign);
+
+      if editCallsign.Text <> strCallsign then begin
+         editCallsign.Text := strCallsign;
+
+         if strCallsign = '' then begin
+            Exit;
+         end;
+
+         buttonQueryClick(nil);
+
+         FLastQueryTickCount := GetTickCount();
+      end;
+   finally
+      // keep alive
+      if (FKeepAliveMinute > 0) and
+         ((GetTickCount() - FLastQueryTickCount) > (FKeepAliveMinute {min} * 60 {sec} * 1000 {msec})) then begin
+         strCountry := '';
+         strCQZone := '';
+         strITUZone := '';
          FLastQueryTickCount := GetTickCount();
       end;
    end;
@@ -773,6 +904,248 @@ procedure TForm1.NetHTTPRequest1RequestException(const Sender: TObject; const AE
 begin
    LogWrite('request exception: ' + AError.Message);
 end;
+
+// ----------------------------------------------------------------------------
+
+function TForm1.FindZlogWindow(): HWND;
+var
+   hZlogWnd: HWND;
+   szCaption: array[0..1024] of Char;
+   strCaption: string;
+   nLen: Integer;
+   slWindows: TStringList;
+   f: TformSelectZLog;
+   childwnd: HWND;
+begin
+   f := TformSelectZLog.Create(Self);
+   slWindows := TStringList.Create();
+   try
+      hZlogWnd := GetTopWindow(0);
+      repeat
+         nLen := GetWindowText(hZlogWnd, szCaption, SizeOf(szCaption));
+         if nLen > 0 then begin
+            strCaption := StrPas(szCaption);
+            if Pos('zLog for Windows', strCaption) > 0 then begin
+               // 子ウインドウを持たないウインドウは除外
+               childwnd := GetWindow(hZlogWnd, GW_CHILD);
+               if (childwnd <> 0) then begin
+                  slWindows.AddObject(strCaption, TObject(hZlogWnd));
+               end;
+            end;
+         end;
+
+         hZlogWnd := GetNextWindow(hZlogWnd, GW_HWNDNEXT)
+      until hZlogWnd = 0;
+
+      if slWindows.Count = 0 then begin
+         Result := 0;
+      end
+      else if slWindows.Count = 1 then begin
+         Result := HWND(slWindows.Objects[0]);
+      end
+      else begin  // >= 2
+         f.List := slWindows;
+         if f.ShowModal() <> mrOK then begin
+            Result := 0;
+            Exit;
+         end;
+
+         Result := HWND(slWindows.Objects[f.SelectedIndex]);
+      end;
+   finally
+      slWindows.Free();
+      f.Release();
+   end;
+end;
+
+// ----------------------------------------------------------------------------
+
+function TForm1.FindN1mmWindow(): HWND;
+var
+   hN1mmWnd: HWND;
+   szCaption: array[0..1024] of Char;
+   strCaption: string;
+   szClassName: array[0..1024] of Char;
+   strClassName: string;
+   nLen: Integer;
+   slWindows: TStringList;
+   f: TformSelectZLog;
+   childwnd: HWND;
+begin
+   f := TformSelectZLog.Create(Self);
+   slWindows := TStringList.Create();
+   try
+      hN1mmWnd := GetTopWindow(0);
+      repeat
+         ZeroMemory(@szClassName, SizeOf(szClassName));
+         nLen := GetClassName(hN1mmWnd, szClassName, SizeOf(szClassName));
+         if nLen > 0 then begin
+            strClassName := StrPas(szClassName);
+            if (strClassName = 'WindowsForms10.Window.8.app.0.141b42a_r14_ad1') then begin
+               // 子ウインドウを持たないウインドウは除外
+               childwnd := GetWindow(hN1mmWnd, GW_CHILD);
+               if (childwnd <> 0) then begin
+                  nLen := GetWindowText(hN1mmWnd, szCaption, SizeOf(szCaption));
+                  strCaption := StrPas(szCaption);
+                  slWindows.AddObject(strCaption, TObject(hN1mmWnd));
+               end;
+            end;
+         end;
+
+         hN1mmWnd := GetNextWindow(hN1mmWnd, GW_HWNDNEXT)
+      until hN1mmWnd = 0;
+
+      if slWindows.Count = 0 then begin
+         Result := 0;
+      end
+      else if slWindows.Count = 1 then begin
+         Result := HWND(slWindows.Objects[0]);
+      end
+      else begin  // >= 2
+         f.List := slWindows;
+         if f.ShowModal() <> mrOK then begin
+            Result := 0;
+            Exit;
+         end;
+
+         Result := HWND(slWindows.Objects[f.SelectedIndex]);
+      end;
+   finally
+      slWindows.Free();
+      f.Release();
+   end;
+end;
+
+// ----------------------------------------------------------------------------
+
+function TForm1.Find_zLog(): HWND;
+var
+   hZlogWnd: HWND;
+   wnd: HWND;
+   ver: Integer;
+begin
+   // zLogのコントロールを調べる
+   hZlogWnd := FindZlogWindow();
+   if (hZlogWnd = 0) then begin
+      Application.MessageBox('zLog for Windowsが見つかりません', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
+      Result := 0;
+      Exit;
+   end;
+
+   // zLog V2.8以降か調べる
+   ver := SendMessage(hZlogWnd, (WM_USER + 201), 0, 0);
+   if ver >= 2800 then begin
+      m_zLogV28 := True;
+      Result := hZlogWnd;
+      Exit;
+   end
+   else begin
+      m_zLogV28 := False;
+   end;
+
+   // 最初の子ウインドウ
+   wnd := GetWindow(hZlogWnd, GW_CHILD);
+   if (wnd = 0) then begin
+      Application.MessageBox('can not find first child window', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
+      Result := 0;
+      Exit;
+   end;
+
+   // 次のウインドウ　たぶんこれが対象のパネル
+   wnd := GetWindow(wnd, GW_HWNDNEXT);
+   if (wnd = 0) then begin
+      Result := 0;
+      Exit;
+   end;
+
+   // timeのTOvrEdit
+   wnd := GetWindow(wnd, GW_CHILD);
+   if (wnd = 0) then begin
+      Result := 0;
+      Exit;
+   end;
+
+   // memo欄
+   wnd := GetWindow(wnd, GW_HWNDNEXT);
+   if (wnd = 0) then begin
+      Result := 0;
+      Exit;
+   end;
+
+   // rcvd
+   wnd := GetWindow(wnd, GW_HWNDNEXT);
+   if (wnd = 0) then begin
+      Result := 0;
+      Exit;
+   end;
+
+   // callsign
+   wnd := GetWindow(wnd, GW_HWNDNEXT);
+   if (wnd = 0) then begin
+      Result := 0;
+      Exit;
+   end;
+
+   Result := wnd;
+end;
+
+// ----------------------------------------------------------------------------
+
+function TForm1.Find_n1mm(): HWND;
+var
+   hN1mmWnd: HWND;
+   wnd: HWND;
+   wnd2: HWND;
+   szClassName: array[0..1024] of Char;
+   strClassName: string;
+   nLen: Integer;
+begin
+   hN1mmWnd := FindN1mmWindow();
+   if (hN1mmWnd = 0) then begin
+      Application.MessageBox('N1MM+が見つかりません', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
+      Result := 0;
+      Exit;
+   end;
+
+   // 最初の子ウインドウ
+   wnd := GetWindow(hN1mmWnd, GW_CHILD);
+   if (wnd = 0) then begin
+      Application.MessageBox('can not find first child window', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
+      Result := 0;
+      Exit;
+   end;
+
+   repeat
+      GetClassName(wnd, szClassName, SizeOf(szClassName));
+      strClassName := StrPas(szClassName);
+      if strClassName = 'WindowsForms10.Window.8.app.0.141b42a_r14_ad1' then begin
+         wnd2 := GetWindow(wnd, GW_CHILD);
+         if (wnd2 = 0) then begin
+            Result := 0;
+            Exit;
+         end;
+
+         GetClassName(wnd2, szClassName, SizeOf(szClassName));
+         strClassName := StrPas(szClassName);
+         if strClassName = 'WindowsForms10.EDIT.app.0.141b42a_r14_ad1' then begin
+            wnd := wnd2;
+            Break;
+         end;
+      end;
+
+      wnd := GetWindow(wnd, GW_HWNDNEXT);
+   until wnd = 0;
+
+   if (wnd = 0) then begin
+      Application.MessageBox('can not find edit control', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
+      Result := 0;
+      Exit;
+   end;
+
+   Result := wnd;
+end;
+
+// ----------------------------------------------------------------------------
 
 function GetExceptionStackInfoProc(P: PExceptionRecord): Pointer;
 var

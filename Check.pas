@@ -27,7 +27,7 @@ procedure TformCheck.Button1Click(Sender: TObject);
 begin
    Button1.Enabled := False;
    try
-      Form1.GoLookup();
+      Form1.GoWtLookup();
    finally
       Button1.Enabled := True;
    end;

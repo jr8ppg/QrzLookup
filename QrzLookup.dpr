@@ -10,7 +10,8 @@ uses
   Main in 'Main.pas' {Form1},
   WtUtils in 'WtUtils.pas',
   Dxcc in 'Dxcc.pas',
-  Check in 'Check.pas' {formCheck};
+  Check in 'Check.pas' {formCheck},
+  SelectZlog in 'SelectZlog.pas' {formSelectZLog};
 
 {$R *.res}
 
