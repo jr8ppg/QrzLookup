@@ -981,7 +981,7 @@ begin
          nLen := GetClassName(hN1mmWnd, szClassName, SizeOf(szClassName));
          if nLen > 0 then begin
             strClassName := StrPas(szClassName);
-            if (strClassName = 'WindowsForms10.Window.8.app.0.141b42a_r14_ad1') then begin
+            if Pos('WindowsForms10.Window.8.app.', strClassName) > 0 then begin
                // 子ウインドウを持たないウインドウは除外
                childwnd := GetWindow(hN1mmWnd, GW_CHILD);
                if (childwnd <> 0) then begin
@@ -1118,7 +1118,7 @@ begin
    repeat
       GetClassName(wnd, szClassName, SizeOf(szClassName));
       strClassName := StrPas(szClassName);
-      if strClassName = 'WindowsForms10.Window.8.app.0.141b42a_r14_ad1' then begin
+      if Pos('WindowsForms10.Window.8.app.', strClassName) > 0 then begin
          wnd2 := GetWindow(wnd, GW_CHILD);
          if (wnd2 = 0) then begin
             Result := 0;
@@ -1127,7 +1127,7 @@ begin
 
          GetClassName(wnd2, szClassName, SizeOf(szClassName));
          strClassName := StrPas(szClassName);
-         if strClassName = 'WindowsForms10.EDIT.app.0.141b42a_r14_ad1' then begin
+         if Pos('WindowsForms10.EDIT.', strClassName) > 0 then begin
             wnd := wnd2;
             Break;
          end;
