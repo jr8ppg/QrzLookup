@@ -57,11 +57,14 @@ begin
 
    {$IFDEF DEBUG}
    for i := Low(FCharBmp) to High(FCharBmp) do begin
-      if FCharMap[i] = '/' then begin
+      if FCharMap[i + 1] = '/' then begin
          fname := 'slash';
       end
-      else if FCharMap[i] = '?' then begin
+      else if FCharMap[i + 1] = '?' then begin
          fname := 'hatena';
+      end
+      else if FCharMap[i + 1] = ' ' then begin
+         fname := 'space';
       end
       else begin
          fname := FCharMap[i + 1];
