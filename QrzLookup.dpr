@@ -7,11 +7,12 @@ uses
   Vcl.Forms,
   Winapi.Windows,
   System.SysUtils,
-  Main in 'Main.pas' {Form1},
+  Main in 'Main.pas' {formMain},
   WtUtils in 'WtUtils.pas',
   Dxcc in 'Dxcc.pas',
   Check in 'Check.pas' {formCheck},
-  SelectZlog in 'SelectZlog.pas' {formSelectZLog};
+  SelectZlog in 'SelectZlog.pas' {formSelectZLog},
+  RbnFilter in 'RbnFilter.pas' {formRbnFilter};
 
 {$R *.res}
 
@@ -34,7 +35,7 @@ begin
 
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TformMain, formMain);
   Application.Run;
   ReleaseMutex(hMutex);
 end.

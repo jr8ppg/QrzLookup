@@ -6,11 +6,12 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.IniFiles, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, System.Math,
   Vcl.ExtCtrls, Vcl.StdCtrls, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc,
-  Vcl.WinXCtrls, WtUtils, Dxcc, Vcl.Grids, JclDebug,
-  System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent;
+  Vcl.WinXCtrls, Vcl.Grids, JclDebug, Vcl.Menus,
+  System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent,
+  WtUtils, Dxcc, RbnFilter;
 
 type
-  TForm1 = class(TForm)
+  TformMain = class(TForm)
     Panel1: TPanel;
     editCallsign: TEdit;
     Label1: TLabel;
@@ -30,6 +31,11 @@ type
     radioLoggerLink1: TRadioButton;
     radioLoggerLink2: TRadioButton;
     radioLoggerLink3: TRadioButton;
+    MainMenu1: TMainMenu;
+    menuFile: TMenuItem;
+    menuRbnTool: TMenuItem;
+    N1: TMenuItem;
+    menuExit: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -55,6 +61,9 @@ type
       const AError: Exception);
     procedure radioLoggerLink2Click(Sender: TObject);
     procedure radioLoggerLink3Click(Sender: TObject);
+    procedure menuRbnToolClick(Sender: TObject);
+    procedure menuExitClick(Sender: TObject);
+    procedure menuFileClick(Sender: TObject);
   private
     { Private êÈåæ }
     FWtUtils: TWtUtils;
@@ -72,7 +81,7 @@ type
     FN1mmLoggerWnd: HWND;
 
     function QrzComLogin(strUserID, strPassword: string; var strResult: string): Boolean;
-    function QueryOneStation(strSessionKey: string; strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean;
+    function QueryOneStation(strSessionKey: string; strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean; overload;
     function GetXmlNode(start_node: IXMLNode; tagname: string; name: string): IXMLNode;
     procedure SetEnable(fEnable: Boolean);
     procedure ClearInfo();
@@ -83,6 +92,7 @@ type
     function Find_n1mm(): HWND;
   public
     { Public êÈåæ }
+    function QueryOneStation(strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean; overload;
     procedure GoWtLookup();
     procedure GoZlogLookup();
     procedure GoN1mmLookup();
@@ -90,7 +100,7 @@ type
   end;
 
 var
-  Form1: TForm1;
+  formMain: TformMain;
 
 implementation
 
@@ -99,7 +109,7 @@ implementation
 uses
   SelectZlog;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TformMain.FormCreate(Sender: TObject);
 var
    ini: TIniFile;
    x, y: Integer;
@@ -166,12 +176,12 @@ begin
    StringGrid1.RowHeights[1] := 80;
 end;
 
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TformMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
    LogWrite('*** QrzLookup stopped ***');
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
+procedure TformMain.FormDestroy(Sender: TObject);
 var
    ini: TIniFile;
 begin
@@ -189,7 +199,7 @@ begin
    end;
 end;
 
-procedure TForm1.FormResize(Sender: TObject);
+procedure TformMain.FormResize(Sender: TObject);
 var
    w: Integer;
    h: Integer;
@@ -205,20 +215,20 @@ begin
    ClientWidth := w * 7 + 12;
 end;
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure TformMain.FormShow(Sender: TObject);
 begin
    SetEnable(False);
    LogWrite('*** QrzLookup started ***');
 end;
 
-procedure TForm1.FormActivate(Sender: TObject);
+procedure TformMain.FormActivate(Sender: TObject);
 begin
    if editCallsign.Enabled = True then begin
       editCallsign.SetFocus();
    end;
 end;
 
-procedure TForm1.buttonQueryClick(Sender: TObject);
+procedure TformMain.buttonQueryClick(Sender: TObject);
 var
    strCallsign: string;
    dwTick: DWORD;
@@ -299,24 +309,24 @@ begin
    end;
 end;
 
-procedure TForm1.editCallsignChange(Sender: TObject);
+procedure TformMain.editCallsignChange(Sender: TObject);
 begin
    if editCallsign.Text = '' then begin
       ClearInfo();
    end;
 end;
 
-procedure TForm1.editCallsignEnter(Sender: TObject);
+procedure TformMain.editCallsignEnter(Sender: TObject);
 begin
    buttonQuery.Default := True;
 end;
 
-procedure TForm1.editCallsignExit(Sender: TObject);
+procedure TformMain.editCallsignExit(Sender: TObject);
 begin
    buttonQuery.Default := False;
 end;
 
-procedure TForm1.timerWtCheckTimer(Sender: TObject);
+procedure TformMain.timerWtCheckTimer(Sender: TObject);
 begin
    timerWtCheck.Enabled := False;
    try
@@ -352,7 +362,7 @@ begin
    end;
 end;
 
-procedure TForm1.ToggleSwitch1Click(Sender: TObject);
+procedure TformMain.ToggleSwitch1Click(Sender: TObject);
 var
    strResult: string;
    curBack: TCursor;
@@ -405,12 +415,12 @@ begin
    end;
 end;
 
-procedure TForm1.updownIntervalClick(Sender: TObject; Button: TUDBtnType);
+procedure TformMain.updownIntervalClick(Sender: TObject; Button: TUDBtnType);
 begin
    timerWtCheck.Interval := updownInterval.Position;
 end;
 
-function TForm1.QrzComLogin(strUserID, strPassword: string; var strResult: string): Boolean;
+function TformMain.QrzComLogin(strUserID, strPassword: string; var strResult: string): Boolean;
 var
    strQuery: string;
    strResponse: string;
@@ -477,7 +487,7 @@ begin
    end;
 end;
 
-function TForm1.QueryOneStation(strSessionKey: string; strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean;
+function TformMain.QueryOneStation(strSessionKey: string; strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean;
 var
    strQuery: string;
    strResponse: string;
@@ -579,7 +589,12 @@ begin
    end;
 end;
 
-procedure TForm1.radioLoggerLink2Click(Sender: TObject);
+function TformMain.QueryOneStation(strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean;
+begin
+   Result := QueryOneStation(FQrzComSessionKey, strCallsign, strCountry, strCQZone, strITUZone, strState);
+end;
+
+procedure TformMain.radioLoggerLink2Click(Sender: TObject);
 begin
    FZLogLoggerWnd := Find_zlog();
    if FZLogLoggerWnd = 0 then begin
@@ -587,7 +602,7 @@ begin
    end;
 end;
 
-procedure TForm1.radioLoggerLink3Click(Sender: TObject);
+procedure TformMain.radioLoggerLink3Click(Sender: TObject);
 begin
    FN1mmLoggerWnd := Find_n1mm();
    if FN1mmLoggerWnd = 0 then begin
@@ -595,7 +610,7 @@ begin
    end;
 end;
 
-function TForm1.GetXmlNode(start_node: IXMLNode; tagname: string; name: string): IXMLNode;
+function TformMain.GetXmlNode(start_node: IXMLNode; tagname: string; name: string): IXMLNode;
 var
    i: integer;
 begin
@@ -628,20 +643,20 @@ begin
    Result := nil;
 end;
 
-procedure TForm1.httpConnected(Sender: TObject);
+procedure TformMain.httpConnected(Sender: TObject);
 begin
    StatusBar1.Panels[3].Text := 'Connected';
    LogWrite('http connected');
 end;
 
-procedure TForm1.httpDisconnected(Sender: TObject);
+procedure TformMain.httpDisconnected(Sender: TObject);
 begin
    StatusBar1.Panels[3].Text := 'Disconnected';
 //   ToggleSwitch1.State := tssOff;
    LogWrite('http disconnected');
 end;
 
-procedure TForm1.SetEnable(fEnable: Boolean);
+procedure TformMain.SetEnable(fEnable: Boolean);
 begin
    editCallsign.Enabled := fEnable;
    buttonQuery.Enabled := fEnable;
@@ -654,7 +669,7 @@ begin
    updownInterval.Enabled := fEnable;
 end;
 
-procedure TForm1.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+procedure TformMain.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 var
    strText: string;
@@ -693,17 +708,17 @@ begin
    end;
 end;
 
-procedure TForm1.StringGrid1TopLeftChanged(Sender: TObject);
+procedure TformMain.StringGrid1TopLeftChanged(Sender: TObject);
 begin
    StringGrid1.LeftCol := 0;
 end;
 
-procedure TForm1.checkUseWtClick(Sender: TObject);
+procedure TformMain.checkUseWtClick(Sender: TObject);
 begin
    FWtUtils.Init();
 end;
 
-procedure TForm1.ClearInfo();
+procedure TformMain.ClearInfo();
 begin
    StringGrid1.Cells[0, 1] := '';
    StringGrid1.Cells[1, 1] := '';
@@ -712,7 +727,7 @@ begin
    StringGrid1.Cells[4, 1] := '';
 end;
 
-function TForm1.GetCallsign(strCallsign: string): string;
+function TformMain.GetCallsign(strCallsign: string): string;
 var
    Index: Integer;
    strLeft, strRight: string;
@@ -734,7 +749,7 @@ begin
    end;
 end;
 
-procedure TForm1.GoWtLookup();
+procedure TformMain.GoWtLookup();
 var
    strCallsign: string;
    strCountry, strCQZone, strITUZone, strState: string;
@@ -767,7 +782,7 @@ begin
    end;
 end;
 
-procedure TForm1.GoZlogLookup();
+procedure TformMain.GoZlogLookup();
 var
    szWindowText: array[0..1024] of Char;
    nLen: Integer;
@@ -824,7 +839,7 @@ begin
    end;
 end;
 
-procedure TForm1.GoN1mmLookup();
+procedure TformMain.GoN1mmLookup();
 var
    szWindowText: array[0..100] of Char;
    strText: WideString;
@@ -874,7 +889,7 @@ begin
    end;
 end;
 
-procedure TForm1.LogWrite(msg: string);
+procedure TformMain.LogWrite(msg: string);
 var
    str: string;
    txt: TextFile;
@@ -895,19 +910,41 @@ begin
    CloseFile( txt );
 end;
 
-procedure TForm1.NetHTTPRequest1RequestError(const Sender: TObject; const AError: string);
+procedure TformMain.NetHTTPRequest1RequestError(const Sender: TObject; const AError: string);
 begin
    LogWrite('request error: ' + AError);
 end;
 
-procedure TForm1.NetHTTPRequest1RequestException(const Sender: TObject; const AError: Exception);
+procedure TformMain.NetHTTPRequest1RequestException(const Sender: TObject; const AError: Exception);
 begin
    LogWrite('request exception: ' + AError.Message);
 end;
 
+procedure TformMain.menuFileClick(Sender: TObject);
+begin
+   menuRbnTool.Enabled := (FQrzComSessionKey <> '')
+end;
+
+procedure TformMain.menuRbnToolClick(Sender: TObject);
+var
+   dlg: TformRbnFilter;
+begin
+   dlg := TformRbnFilter.Create(Self);
+   try
+      dlg.ShowModal();
+   finally
+      dlg.Release();
+   end;
+end;
+
+procedure TformMain.menuExitClick(Sender: TObject);
+begin
+   Close();
+end;
+
 // ----------------------------------------------------------------------------
 
-function TForm1.FindZlogWindow(): HWND;
+function TformMain.FindZlogWindow(): HWND;
 var
    hZlogWnd: HWND;
    szCaption: array[0..1024] of Char;
@@ -960,7 +997,7 @@ end;
 
 // ----------------------------------------------------------------------------
 
-function TForm1.FindN1mmWindow(): HWND;
+function TformMain.FindN1mmWindow(): HWND;
 var
    hN1mmWnd: HWND;
    szCaption: array[0..1024] of Char;
@@ -1018,7 +1055,7 @@ end;
 
 // ----------------------------------------------------------------------------
 
-function TForm1.Find_zLog(): HWND;
+function TformMain.Find_zLog(): HWND;
 var
    hZlogWnd: HWND;
    wnd: HWND;
@@ -1091,7 +1128,7 @@ end;
 
 // ----------------------------------------------------------------------------
 
-function TForm1.Find_n1mm(): HWND;
+function TformMain.Find_n1mm(): HWND;
 var
    hN1mmWnd: HWND;
    wnd: HWND;

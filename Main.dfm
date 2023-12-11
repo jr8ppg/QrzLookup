@@ -1,4 +1,4 @@
-object Form1: TForm1
+object formMain: TformMain
   Left = 0
   Top = 0
   Caption = 'QRZ.COM Lookup Tool'
@@ -12,6 +12,7 @@ object Form1: TForm1
   Font.Height = -15
   Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
   Font.Style = []
+  Menu = MainMenu1
   OldCreateOrder = False
   OnActivate = FormActivate
   OnClose = FormClose
@@ -230,5 +231,24 @@ object Form1: TForm1
     OnRequestException = NetHTTPRequest1RequestException
     Left = 400
     Top = 60
+  end
+  object MainMenu1: TMainMenu
+    Left = 528
+    Top = 80
+    object menuFile: TMenuItem
+      Caption = #12501#12449#12452#12523'(&F)'
+      OnClick = menuFileClick
+      object menuRbnTool: TMenuItem
+        Caption = 'RBN'#12487#12540#12479#12398#37325#35079#21066#38500'(&R)'
+        OnClick = menuRbnToolClick
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object menuExit: TMenuItem
+        Caption = #32066#20102'(&X)'
+        OnClick = menuExitClick
+      end
+    end
   end
 end

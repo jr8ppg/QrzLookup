@@ -151,7 +151,7 @@
             <Form>resource.res</Form>
         </RcCompile>
         <DCCReference Include="Main.pas">
-            <Form>Form1</Form>
+            <Form>formMain</Form>
         </DCCReference>
         <DCCReference Include="WtUtils.pas"/>
         <DCCReference Include="Dxcc.pas"/>
@@ -160,6 +160,10 @@
         </DCCReference>
         <DCCReference Include="SelectZlog.pas">
             <Form>formSelectZLog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="RbnFilter.pas">
+            <Form>formRbnFilter</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <RcItem Include="bmp_wtchars.bmp">
