@@ -502,7 +502,7 @@ begin
    xmldoc := TXMLDocument.Create(Self);
    try
    try
-      LogWrite(' **** Enter - QueryOneStation() *** ');
+//      LogWrite(' **** Enter - QueryOneStation() *** ');
 
       strCallsign := UpperCase(Trim(strCallsign));
       if strCallsign = '' then begin
@@ -587,7 +587,7 @@ begin
    end;
    finally
       xmldoc.Free;
-      LogWrite(' **** Leave - QueryOneStation() *** ');
+//      LogWrite(' **** Leave - QueryOneStation() *** ');
    end;
 end;
 

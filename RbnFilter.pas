@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  System.Generics.Collections, UMultipliers;
+  System.Generics.Collections, UMultipliers, Progress;
 
 type
   TRbnRecord = class
@@ -48,11 +48,17 @@ type
     Label3: TLabel;
     editOutputFileName: TEdit;
     buttonClose: TButton;
+    GroupBox3: TGroupBox;
+    radioDeQrzCom: TRadioButton;
+    radioDeCtyDat: TRadioButton;
+    GroupBox4: TGroupBox;
+    radioDxQrzCom: TRadioButton;
+    radioDxCtyDat: TRadioButton;
     procedure buttonStartClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure buttonFileRefClick(Sender: TObject);
     procedure editInputFileNameChange(Sender: TObject);
-    function GetZone(strCallsign: string): string;
+    function GetZone(strCallsign: string; fQrzlookup: Boolean): string;
     procedure FormDestroy(Sender: TObject);
   private
     { Private êÈåæ }
@@ -107,19 +113,19 @@ var
    nColumnCount: Integer;
    list: TDictionary<string, string>;
    key: string;
-   strFiltered: string;
-   strExt: string;
    nDateCompare: Integer;
    nDxCompare: Integer;
    de_zone: string;
    dx_zone: string;
+   progress: TformProgress;
 begin
    slFile := TStringList.Create();
    slLine := TStringList.Create();
    slLine.StrictDelimiter := True;
    slFiltered := TStringList.Create();
    list := TDictionary<string, string>.Create();
-   Screen.Cursor := crHourglass;
+   progress := TformProgress.Create(Self);
+//   Screen.Cursor := crHourglass;
    try
       if checkDateCompare13.checked = True then begin
          nDateCompare := 13;
@@ -144,12 +150,12 @@ begin
          nDxCompare := 6;
       end;
 
-      strExt := ExtractFileExt(editInputFileName.Text);
-      strFiltered := ExtractFilePath(editInputFileName.Text) + ExtractFileName(editInputFileName.Text);
-      strFiltered := StringReplace(strFiltered, strExt, '', [rfReplaceAll]);
-      strFiltered := strFiltered + '_filtered' + strExt;
-
       slFile.LoadFromFile(editInputFileName.Text);
+
+      progress.Title := '';
+      progress.Text := '';
+      progress.Show();
+      Enabled := False;
 
       nColumnCount := 0;
       for i := 0 to slFile.Count - 1 do begin
@@ -167,6 +173,10 @@ begin
                Continue;
             end;
 
+            progress.Title := 'DE=' + slLine[0] + ' DX=' + slLine[5];
+            progress.Text := IntToStr(i + 1) + '/' + IntToStr(slFile.Count);
+            Application.ProcessMessages();
+
             // 0        1      2       3    4    5  6      7       8    9  10   11    12
             // callsign,de_pfx,de_cont,freq,band,dx,dx_pfx,dx_cont,mode,db,date,speed,tx_mode
 
@@ -178,8 +188,8 @@ begin
 
                list.Add(key, slLine.CommaText);
 
-               de_zone := GetZone(slLine[0]);
-               dx_zone := GetZone(slLine[5]);
+               de_zone := GetZone(slLine[0], radioDeQrzCom.Checked);
+               dx_zone := GetZone(slLine[5], radioDxQrzCom.Checked);
                slLine.Add(de_zone);
                slLine.Add(dx_zone);
                slFiltered.Add(slLine.CommaText);
@@ -187,9 +197,13 @@ begin
          end;
       end;
 
+      progress.Hide();
+      Enabled := True;
+
       slFiltered.SaveToFile(editOutputFileName.Text);
    finally
-      Screen.Cursor := crDefault;
+      progress.Release();
+//      Screen.Cursor := crDefault;
       slFile.Free();
       slLine.Free();
       slFiltered.Free();
@@ -213,10 +227,11 @@ begin
    editOutputFileName.Text := strFiltered;
 end;
 
-function TformRbnFilter.GetZone(strCallsign: string): string;
+function TformRbnFilter.GetZone(strCallsign: string; fQrzlookup: Boolean): string;
 var
    strCountry, strCQZone, strITUZone, strState: string;
    zone: string;
+   Index: Integer;
 begin
    // JAÇÕèúÇ≠
    if IsDomestic(strCallsign) = True then begin
@@ -224,20 +239,31 @@ begin
       Exit;
    end;
 
+   // -Ç™Ç†Ç¡ÇΩÇÁÇªÇÍà»ç~ÇéÊÇËèúÇ≠
+   Index := Pos('-', strCallsign);
+   if Index > 0 then begin
+      strCallsign := Copy(strCallsign, 1, Index - 1);
+   end;
+
    // ä˘Ç…LookupçœÇ›Ç»ÇÁÇªÇÃílÇï‘Ç∑
    if FQrzComLookup.TryGetValue(strCallsign, zone) = True then begin
+//      formMain.LogWrite(strCallsign + ' was in cache data');
       Result := zone;
       Exit;
    end
    else begin
-      if formMain.QueryOneStation(strCallsign, strCountry, strCQZone, strITUZone, strState) = True then begin
-         Result := strCQZone;
-         FQrzComLookup.Add(strCallsign, strCQZone);
+      if (fQrzlookup = True) and (formMain.QueryOneStation(strCallsign, strCountry, strCQZone, strITUZone, strState) = True) then begin
+         if strCQZone = '' then begin
+            strCQZone := GuessCQZone(strCallsign);
+         end;
       end
       else begin
          // LookupÇ≈Ç´Ç»Ç¢éûÇÕCTY.DATÇÃèÓïÒÇ≈îªíË
-         Result := GuessCQZone(strCallsign);
+         strCQZone := GuessCQZone(strCallsign);
       end;
+
+      FQrzComLookup.Add(strCallsign, strCQZone);
+      Result := strCQZone;
    end;
 end;
 

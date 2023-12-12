@@ -167,6 +167,10 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="UMultipliers.pas"/>
+        <DCCReference Include="Progress.pas">
+            <Form>formProgress</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcItem Include="bmp_wtchars.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>IDB_WTCHARS</ResourceId>

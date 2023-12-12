@@ -3,7 +3,7 @@ object formRbnFilter: TformRbnFilter
   Top = 0
   BorderStyle = bsDialog
   Caption = 'RbnFilter'
-  ClientHeight = 309
+  ClientHeight = 383
   ClientWidth = 577
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object formRbnFilter: TformRbnFilter
   OnDestroy = FormDestroy
   DesignSize = (
     577
-    309)
+    383)
   PixelsPerInch = 96
   TextHeight = 12
   object Label1: TLabel
@@ -61,7 +61,7 @@ object formRbnFilter: TformRbnFilter
   end
   object buttonStart: TButton
     Left = 456
-    Top = 176
+    Top = 163
     Width = 113
     Height = 54
     Anchors = [akTop, akRight]
@@ -89,8 +89,8 @@ object formRbnFilter: TformRbnFilter
     OnClick = buttonFileRefClick
   end
   object GroupBox1: TGroupBox
-    Left = 160
-    Top = 158
+    Left = 8
+    Top = 294
     Width = 146
     Height = 81
     Caption = 'date'#12398#27604#36611#25991#23383#25968
@@ -166,7 +166,7 @@ object formRbnFilter: TformRbnFilter
   end
   object buttonClose: TButton
     Left = 456
-    Top = 267
+    Top = 342
     Width = 113
     Height = 33
     Anchors = [akTop, akRight]
@@ -175,6 +175,58 @@ object formRbnFilter: TformRbnFilter
     ModalResult = 2
     TabOrder = 6
     OnClick = buttonStartClick
+  end
+  object GroupBox3: TGroupBox
+    Left = 160
+    Top = 158
+    Width = 105
+    Height = 81
+    Caption = 'de_zone'
+    TabOrder = 7
+    object radioDeQrzCom: TRadioButton
+      Left = 16
+      Top = 24
+      Width = 65
+      Height = 17
+      Caption = 'QRZ.COM'
+      Checked = True
+      TabOrder = 0
+      TabStop = True
+    end
+    object radioDeCtyDat: TRadioButton
+      Left = 16
+      Top = 47
+      Width = 65
+      Height = 17
+      Caption = 'CTY.DAT'
+      TabOrder = 1
+    end
+  end
+  object GroupBox4: TGroupBox
+    Left = 160
+    Top = 245
+    Width = 105
+    Height = 81
+    Caption = 'dx_zone'
+    TabOrder = 8
+    object radioDxQrzCom: TRadioButton
+      Left = 16
+      Top = 24
+      Width = 65
+      Height = 17
+      Caption = 'QRZ.COM'
+      TabOrder = 0
+    end
+    object radioDxCtyDat: TRadioButton
+      Left = 16
+      Top = 47
+      Width = 65
+      Height = 17
+      Caption = 'CTY.DAT'
+      Checked = True
+      TabOrder = 1
+      TabStop = True
+    end
   end
   object OpenDialog1: TOpenDialog
     Filter = 'CSV'#12501#12449#12452#12523'|*.csv|'#20840#12390#12398#12501#12449#12452#12523'|*.*'

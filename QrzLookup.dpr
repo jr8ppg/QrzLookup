@@ -13,7 +13,8 @@ uses
   Check in 'Check.pas' {formCheck},
   SelectZlog in 'SelectZlog.pas' {formSelectZLog},
   RbnFilter in 'RbnFilter.pas' {formRbnFilter},
-  UMultipliers in 'UMultipliers.pas';
+  UMultipliers in 'UMultipliers.pas',
+  Progress in 'Progress.pas' {formProgress};
 
 {$R *.res}
 
