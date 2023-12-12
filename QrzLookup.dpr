@@ -12,7 +12,8 @@ uses
   Dxcc in 'Dxcc.pas',
   Check in 'Check.pas' {formCheck},
   SelectZlog in 'SelectZlog.pas' {formSelectZLog},
-  RbnFilter in 'RbnFilter.pas' {formRbnFilter};
+  RbnFilter in 'RbnFilter.pas' {formRbnFilter},
+  UMultipliers in 'UMultipliers.pas';
 
 {$R *.res}
 

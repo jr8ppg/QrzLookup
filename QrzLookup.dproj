@@ -166,6 +166,7 @@
             <Form>formRbnFilter</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="UMultipliers.pas"/>
         <RcItem Include="bmp_wtchars.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>IDB_WTCHARS</ResourceId>

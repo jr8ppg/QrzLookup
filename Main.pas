@@ -1,4 +1,4 @@
-unit Main;
+ï»¿unit Main;
 
 interface
 
@@ -65,7 +65,7 @@ type
     procedure menuExitClick(Sender: TObject);
     procedure menuFileClick(Sender: TObject);
   private
-    { Private éŒ¾ }
+    { Private å®£è¨€ }
     FWtUtils: TWtUtils;
     FQrzComSessionKey: string;
     FQrzUserId, FQrzPassword: string;
@@ -91,13 +91,15 @@ type
     function Find_zLog(): HWND;
     function Find_n1mm(): HWND;
   public
-    { Public éŒ¾ }
+    { Public å®£è¨€ }
     function QueryOneStation(strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean; overload;
     procedure GoWtLookup();
     procedure GoZlogLookup();
     procedure GoN1mmLookup();
     procedure LogWrite(msg: string);
   end;
+
+function IsDomestic(strCallsign: string): Boolean;
 
 var
   formMain: TformMain;
@@ -522,10 +524,10 @@ begin
 
       strQuery := strQuery + '?s=' + strSessionKey + ';callsign=' + strCallsign;
 
-      // URL‚ğ‹L˜^
+      // URLã‚’è¨˜éŒ²
       LogWrite(strQuery);
 
-      // httpÆ‰ï
+      // httpç…§ä¼š
       res := NetHTTPRequest1.Get(strQuery);
       strResponse := res.ContentAsString();
 
@@ -676,7 +678,7 @@ var
    x, y: Integer;
 begin
    with StringGrid1.Canvas do begin
-      Font.Name := '‚l‚r ‚oƒSƒVƒbƒN';
+      Font.Name := 'ï¼­ï¼³ ï¼°ã‚´ã‚·ãƒƒã‚¯';
       if ARow = 0 then begin
          Brush.Color := StringGrid1.FixedColor;
          Brush.Style := bsSolid;
@@ -963,7 +965,7 @@ begin
          if nLen > 0 then begin
             strCaption := StrPas(szCaption);
             if Pos('zLog for Windows', strCaption) > 0 then begin
-               // qƒEƒCƒ“ƒhƒE‚ğ‚½‚È‚¢ƒEƒCƒ“ƒhƒE‚ÍœŠO
+               // å­ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã‚’æŒãŸãªã„ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã¯é™¤å¤–
                childwnd := GetWindow(hZlogWnd, GW_CHILD);
                if (childwnd <> 0) then begin
                   slWindows.AddObject(strCaption, TObject(hZlogWnd));
@@ -1019,7 +1021,7 @@ begin
          if nLen > 0 then begin
             strClassName := StrPas(szClassName);
             if Pos('WindowsForms10.Window.8.app.', strClassName) > 0 then begin
-               // qƒEƒCƒ“ƒhƒE‚ğ‚½‚È‚¢ƒEƒCƒ“ƒhƒE‚ÍœŠO
+               // å­ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã‚’æŒãŸãªã„ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã¯é™¤å¤–
                childwnd := GetWindow(hN1mmWnd, GW_CHILD);
                if (childwnd <> 0) then begin
                   nLen := GetWindowText(hN1mmWnd, szCaption, SizeOf(szCaption));
@@ -1061,15 +1063,15 @@ var
    wnd: HWND;
    ver: Integer;
 begin
-   // zLog‚ÌƒRƒ“ƒgƒ[ƒ‹‚ğ’²‚×‚é
+   // zLogã®ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã‚’èª¿ã¹ã‚‹
    hZlogWnd := FindZlogWindow();
    if (hZlogWnd = 0) then begin
-      Application.MessageBox('zLog for Windows‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
+      Application.MessageBox('zLog for WindowsãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
       Result := 0;
       Exit;
    end;
 
-   // zLog V2.8ˆÈ~‚©’²‚×‚é
+   // zLog V2.8ä»¥é™ã‹èª¿ã¹ã‚‹
    ver := SendMessage(hZlogWnd, (WM_USER + 201), 0, 0);
    if ver >= 2800 then begin
       m_zLogV28 := True;
@@ -1080,7 +1082,7 @@ begin
       m_zLogV28 := False;
    end;
 
-   // Å‰‚ÌqƒEƒCƒ“ƒhƒE
+   // æœ€åˆã®å­ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦
    wnd := GetWindow(hZlogWnd, GW_CHILD);
    if (wnd = 0) then begin
       Application.MessageBox('can not find first child window', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
@@ -1088,21 +1090,21 @@ begin
       Exit;
    end;
 
-   // Ÿ‚ÌƒEƒCƒ“ƒhƒE@‚½‚Ô‚ñ‚±‚ê‚ª‘ÎÛ‚Ìƒpƒlƒ‹
+   // æ¬¡ã®ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã€€ãŸã¶ã‚“ã“ã‚ŒãŒå¯¾è±¡ã®ãƒ‘ãƒãƒ«
    wnd := GetWindow(wnd, GW_HWNDNEXT);
    if (wnd = 0) then begin
       Result := 0;
       Exit;
    end;
 
-   // time‚ÌTOvrEdit
+   // timeã®TOvrEdit
    wnd := GetWindow(wnd, GW_CHILD);
    if (wnd = 0) then begin
       Result := 0;
       Exit;
    end;
 
-   // memo—“
+   // memoæ¬„
    wnd := GetWindow(wnd, GW_HWNDNEXT);
    if (wnd = 0) then begin
       Result := 0;
@@ -1135,16 +1137,15 @@ var
    wnd2: HWND;
    szClassName: array[0..1024] of Char;
    strClassName: string;
-   nLen: Integer;
 begin
    hN1mmWnd := FindN1mmWindow();
    if (hN1mmWnd = 0) then begin
-      Application.MessageBox('N1MM+‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
+      Application.MessageBox('N1MM+ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
       Result := 0;
       Exit;
    end;
 
-   // Å‰‚ÌqƒEƒCƒ“ƒhƒE
+   // æœ€åˆã®å­ã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦
    wnd := GetWindow(hN1mmWnd, GW_CHILD);
    if (wnd = 0) then begin
       Application.MessageBox('can not find first child window', 'QRZLOOKUP', MB_OK or MB_ICONEXCLAMATION);
@@ -1180,6 +1181,64 @@ begin
    end;
 
    Result := wnd;
+end;
+
+// ----------------------------------------------------------------------------
+
+// JA1â€“JS1, 7J1, 8J1â€“8N1, 7K1â€“7N4
+// JA2â€“JS2, 7J2, 8J2â€“8N2
+// JA3â€“JS3, 7J3, 8J3â€“8N3
+// JA4â€“JS4, 7J4, 8J4â€“8N4
+// JA5â€“JS5, 7J5, 8J5â€“8N5
+// JA6â€“JS6, 7J6, 8J6â€“8N6
+// JA7â€“JS7, 7J7, 8J7â€“8N7
+// JA8â€“JS8, 7J8, 8J8â€“8N8
+// JA9â€“JS9, 7J9, 8J9â€“8N9
+// JA0â€“JS0, 7J0, 8J0â€“8N0
+function IsDomestic(strCallsign: string): Boolean;
+var
+   S1: Char;
+   S2: Char;
+   S3: Char;
+begin
+   if strCallsign = '' then begin
+      Result := True;
+      Exit;
+   end;
+
+   S1 := strCallsign[1];
+   S2 := strCallsign[2];
+   S3 := strCallsign[3];
+
+   if S1 = 'J' then begin
+      if (S2 >= 'A') and (S2 <= 'S') then begin
+         Result := True;
+         Exit;
+      end;
+   end;
+
+   if (S1 = '7') and (S2 = 'J') then begin
+      Result := True;
+      Exit;
+   end;
+
+   if S1 = '7' then begin
+      if (S2 >= 'K') and (S2 <= 'N') then begin
+         if (S3 >= '1') and (S3 <= '4') then begin
+            Result := True;
+            Exit;
+         end;
+      end;
+   end;
+
+   if S1 = '8' then begin
+      if (S2 >= 'J') and (S2 <= 'N') then begin
+         Result := True;
+         Exit;
+      end;
+   end;
+
+   Result := False;
 end;
 
 // ----------------------------------------------------------------------------

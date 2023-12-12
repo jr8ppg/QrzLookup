@@ -77,7 +77,6 @@ object formRbnFilter: TformRbnFilter
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
     OnChange = editInputFileNameChange
-    ExplicitWidth = 649
   end
   object buttonFileRef: TButton
     Left = 488
@@ -88,7 +87,6 @@ object formRbnFilter: TformRbnFilter
     Caption = #21442#29031
     TabOrder = 1
     OnClick = buttonFileRefClick
-    ExplicitLeft = 576
   end
   object GroupBox1: TGroupBox
     Left = 160
@@ -165,7 +163,6 @@ object formRbnFilter: TformRbnFilter
     Height = 20
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 2
-    ExplicitWidth = 649
   end
   object buttonClose: TButton
     Left = 456
@@ -178,7 +175,6 @@ object formRbnFilter: TformRbnFilter
     ModalResult = 2
     TabOrder = 6
     OnClick = buttonStartClick
-    ExplicitLeft = 544
   end
   object OpenDialog1: TOpenDialog
     Filter = 'CSV'#12501#12449#12452#12523'|*.csv|'#20840#12390#12398#12501#12449#12452#12523'|*.*'
