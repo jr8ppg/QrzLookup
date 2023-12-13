@@ -3,7 +3,7 @@ object formProgress: TformProgress
   Top = 0
   BorderStyle = bsSizeToolWin
   Caption = 'Progress'
-  ClientHeight = 47
+  ClientHeight = 98
   ClientWidth = 336
   Color = clBtnFace
   DoubleBuffered = True
@@ -14,6 +14,7 @@ object formProgress: TformProgress
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 12
   object labelProgress: TLabel
@@ -31,5 +32,21 @@ object formProgress: TformProgress
     Height = 12
     AutoSize = False
     Caption = 'xxx'#12434#12375#12390#12356#12414#12377
+  end
+  object ProgressBar1: TProgressBar
+    Left = 8
+    Top = 44
+    Width = 320
+    Height = 17
+    TabOrder = 0
+  end
+  object buttonAbort: TButton
+    Left = 128
+    Top = 67
+    Width = 89
+    Height = 25
+    Caption = #20013#27490
+    TabOrder = 1
+    OnClick = buttonAbortClick
   end
 end

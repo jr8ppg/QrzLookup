@@ -54,12 +54,16 @@ type
     GroupBox4: TGroupBox;
     radioDxQrzCom: TRadioButton;
     radioDxCtyDat: TRadioButton;
+    radioDeZone: TRadioButton;
+    radioDxZone: TRadioButton;
     procedure buttonStartClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure buttonFileRefClick(Sender: TObject);
     procedure editInputFileNameChange(Sender: TObject);
     function GetZone(strCallsign: string; fQrzlookup: Boolean): string;
     procedure FormDestroy(Sender: TObject);
+    procedure radioDxDeClick(Sender: TObject);
+    procedure buttonCloseClick(Sender: TObject);
   private
     { Private êÈåæ }
     FQrzComLookup: TDictionary<string, string>;
@@ -95,6 +99,11 @@ begin
    FCountryList.Free();
 end;
 
+procedure TformRbnFilter.buttonCloseClick(Sender: TObject);
+begin
+   Close();
+end;
+
 procedure TformRbnFilter.buttonFileRefClick(Sender: TObject);
 begin
    if OpenDialog1.Execute(Self.Handle) <> True then begin
@@ -102,6 +111,11 @@ begin
    end;
 
    editInputFileName.Text := OpenDialog1.FileName;
+end;
+
+procedure TformRbnFilter.radioDxDeClick(Sender: TObject);
+begin
+//
 end;
 
 procedure TformRbnFilter.buttonStartClick(Sender: TObject);
@@ -140,6 +154,9 @@ begin
       else if radioDxCont.Checked = True then begin
          nDxCompare := 7;
       end
+      else if radioDxZone.Checked = True then begin
+         nDxCompare := 14;
+      end
       else if radioDePfx.Checked = True then begin
          nDxCompare := 1;
       end
@@ -147,7 +164,7 @@ begin
          nDxCompare := 2;
       end
       else begin
-         nDxCompare := 6;
+         nDxCompare := 13;    // de_zone
       end;
 
       slFile.LoadFromFile(editInputFileName.Text);
@@ -173,25 +190,30 @@ begin
                Continue;
             end;
 
+            // ZONEèÓïÒÇí«â¡Ç∑ÇÈ
+            de_zone := GetZone(slLine[0], radioDeQrzCom.Checked);
+            dx_zone := GetZone(slLine[5], radioDxQrzCom.Checked);
+            slLine.Add(de_zone);
+            slLine.Add(dx_zone);
+
             progress.Title := 'DE=' + slLine[0] + ' DX=' + slLine[5];
             progress.Text := IntToStr(i + 1) + '/' + IntToStr(slFile.Count);
+            progress.SetProgressData(i + 1, slFile.Count);
             Application.ProcessMessages();
 
-            // 0        1      2       3    4    5  6      7       8    9  10   11    12
-            // callsign,de_pfx,de_cont,freq,band,dx,dx_pfx,dx_cont,mode,db,date,speed,tx_mode
+            if progress.Abort = True then begin
+               Break;
+            end;
+
+            // 0        1      2       3    4    5  6      7       8    9  10   11    12      13      14
+            // callsign,de_pfx,de_cont,freq,band,dx,dx_pfx,dx_cont,mode,db,date,speed,tx_mode,de_zone,dx_zone
 
             // 1234567890123456
             // 2023-11-25 00:00:00
             key := slLine[5] + slLine[4] + slLine[nDxCompare] + Copy(slLine[10], 1, nDateCompare);
 
             if list.ContainsKey(key) = False then begin
-
                list.Add(key, slLine.CommaText);
-
-               de_zone := GetZone(slLine[0], radioDeQrzCom.Checked);
-               dx_zone := GetZone(slLine[5], radioDxQrzCom.Checked);
-               slLine.Add(de_zone);
-               slLine.Add(dx_zone);
                slFiltered.Add(slLine.CommaText);
             end;
          end;
