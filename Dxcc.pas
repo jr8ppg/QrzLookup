@@ -140,6 +140,7 @@ begin
    else begin
       Result := nil;
    end;
+   obj.Free();
 end;
 
 procedure TDxccList.Sort();

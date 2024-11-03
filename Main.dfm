@@ -2,185 +2,45 @@ object formMain: TformMain
   Left = 0
   Top = 0
   Caption = 'QRZ.COM Lookup Tool'
-  ClientHeight = 162
-  ClientWidth = 724
+  ClientHeight = 184
+  ClientWidth = 688
   Color = clBtnFace
   Constraints.MinHeight = 150
-  Constraints.MinWidth = 740
+  Constraints.MinWidth = 350
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
   Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
   Font.Style = []
   Menu = MainMenu1
-  OldCreateOrder = False
   OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnResize = FormResize
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 15
-  object Panel1: TPanel
+  object StringGrid1: TStringGrid
     Left = 0
-    Top = 0
-    Width = 724
-    Height = 41
-    Align = alTop
-    BevelOuter = bvNone
-    TabOrder = 0
-    object Label1: TLabel
-      Left = 100
-      Top = 13
-      Width = 48
-      Height = 15
-      Caption = 'Callsign'
-    end
-    object Label2: TLabel
-      Left = 580
-      Top = 13
-      Width = 46
-      Height = 15
-      Caption = 'interval'
-    end
-    object Label3: TLabel
-      Left = 699
-      Top = 13
-      Width = 18
-      Height = 15
-      Caption = 'ms'
-    end
-    object editCallsign: TEdit
-      Left = 154
-      Top = 10
-      Width = 105
-      Height = 23
-      CharCase = ecUpperCase
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -15
-      Font.Name = #65325#65331' '#12468#12471#12483#12463
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 1
-      OnChange = editCallsignChange
-      OnEnter = editCallsignEnter
-      OnExit = editCallsignExit
-    end
-    object buttonQuery: TButton
-      Left = 261
-      Top = 10
-      Width = 62
-      Height = 23
-      Caption = 'Lookup'
-      TabOrder = 2
-      OnClick = buttonQueryClick
-    end
-    object ToggleSwitch1: TToggleSwitch
-      Left = 10
-      Top = 11
-      Width = 83
-      Height = 20
-      StateCaptions.CaptionOn = 'ON'
-      StateCaptions.CaptionOff = 'OFF'
-      TabOrder = 0
-      OnClick = ToggleSwitch1Click
-    end
-    object editInterval: TEdit
-      Left = 632
-      Top = 10
-      Width = 45
-      Height = 23
-      TabOrder = 3
-      Text = '500'
-    end
-    object updownInterval: TUpDown
-      Left = 677
-      Top = 10
-      Width = 16
-      Height = 23
-      Associate = editInterval
-      Min = 100
-      Max = 3000
-      Increment = 20
-      Position = 500
-      TabOrder = 4
-      OnClick = updownIntervalClick
-    end
-    object Panel2: TPanel
-      Left = 334
-      Top = 10
-      Width = 238
-      Height = 25
-      BevelOuter = bvLowered
-      TabOrder = 5
-      object radioLoggerLink0: TRadioButton
-        Left = 8
-        Top = 7
-        Width = 42
-        Height = 13
-        Caption = 'None'
-        Checked = True
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
-        Font.Style = []
-        ParentFont = False
-        TabOrder = 0
-        TabStop = True
-      end
-      object radioLoggerLink1: TRadioButton
-        Left = 56
-        Top = 8
-        Width = 69
-        Height = 13
-        Caption = 'Win-Test'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
-        Font.Style = []
-        ParentFont = False
-        TabOrder = 1
-      end
-      object radioLoggerLink2: TRadioButton
-        Left = 127
-        Top = 8
-        Width = 44
-        Height = 13
-        Caption = 'zLog'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
-        Font.Style = []
-        ParentFont = False
-        TabOrder = 2
-        OnClick = radioLoggerLink2Click
-      end
-      object radioLoggerLink3: TRadioButton
-        Left = 175
-        Top = 8
-        Width = 58
-        Height = 13
-        Caption = 'N1MM+'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
-        Font.Style = []
-        ParentFont = False
-        TabOrder = 3
-        OnClick = radioLoggerLink3Click
-      end
-    end
+    Top = 30
+    Width = 688
+    Height = 135
+    Align = alClient
+    FixedCols = 0
+    RowCount = 2
+    TabOrder = 1
+    OnDrawCell = StringGrid1DrawCell
+    OnMouseWheelDown = StringGrid1MouseWheelDown
+    OnMouseWheelUp = StringGrid1MouseWheelUp
+    OnTopLeftChanged = StringGrid1TopLeftChanged
+    ExplicitTop = 41
+    ExplicitWidth = 684
+    ExplicitHeight = 123
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 143
-    Width = 724
+    Top = 165
+    Width = 688
     Height = 19
     Panels = <
       item
@@ -199,18 +59,60 @@ object formMain: TformMain
         Alignment = taCenter
         Width = 100
       end>
+    ExplicitTop = 164
+    ExplicitWidth = 684
   end
-  object StringGrid1: TStringGrid
+  object Panel1: TPanel
     Left = 0
-    Top = 41
-    Width = 724
-    Height = 102
-    Align = alClient
-    FixedCols = 0
-    RowCount = 2
+    Top = 0
+    Width = 688
+    Height = 30
+    Align = alTop
+    BevelOuter = bvNone
     TabOrder = 2
-    OnDrawCell = StringGrid1DrawCell
-    OnTopLeftChanged = StringGrid1TopLeftChanged
+    object Label1: TLabel
+      Left = 95
+      Top = 7
+      Width = 48
+      Height = 15
+      Caption = 'Callsign'
+    end
+    object editCallsign: TEdit
+      Left = 149
+      Top = 4
+      Width = 105
+      Height = 23
+      CharCase = ecUpperCase
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -15
+      Font.Name = #65325#65331' '#12468#12471#12483#12463
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 1
+      OnChange = editCallsignChange
+      OnEnter = editCallsignEnter
+      OnExit = editCallsignExit
+    end
+    object buttonQuery: TButton
+      Left = 256
+      Top = 4
+      Width = 62
+      Height = 23
+      Caption = 'Lookup'
+      TabOrder = 2
+      OnClick = buttonQueryClick
+    end
+    object ToggleSwitch1: TToggleSwitch
+      Left = 5
+      Top = 5
+      Width = 83
+      Height = 20
+      StateCaptions.CaptionOn = 'ON'
+      StateCaptions.CaptionOff = 'OFF'
+      TabOrder = 0
+      OnClick = ToggleSwitch1Click
+    end
   end
   object timerWtCheck: TTimer
     Interval = 500
@@ -233,11 +135,24 @@ object formMain: TformMain
     Top = 60
   end
   object MainMenu1: TMainMenu
+    AutoHotkeys = maManual
+    AutoLineReduction = maManual
     Left = 528
     Top = 80
     object menuFile: TMenuItem
-      Caption = #12501#12449#12452#12523'(&F)'
+      Caption = #27231#33021'(&F)'
       OnClick = menuFileClick
+      object menuOptions: TMenuItem
+        Caption = #12458#12503#12471#12519#12531'(&O)'
+        OnClick = menuOptionsClick
+      end
+      object menuCustomList: TMenuItem
+        Caption = #12459#12473#12479#12512#12522#12473#12488'(&C)'
+        OnClick = menuCustomListClick
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
       object menuRbnTool: TMenuItem
         Caption = 'RBN'#12487#12540#12479#12398#37325#35079#21066#38500'(&R)'
         OnClick = menuRbnToolClick

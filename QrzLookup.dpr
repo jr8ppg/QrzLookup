@@ -14,7 +14,12 @@ uses
   SelectZlog in 'SelectZlog.pas' {formSelectZLog},
   RbnFilter in 'RbnFilter.pas' {formRbnFilter},
   UMultipliers in 'UMultipliers.pas',
-  Progress in 'Progress.pas' {formProgress};
+  Progress in 'Progress.pas' {formProgress},
+  UOptions in 'UOptions.pas' {formOptions},
+  UCustomListDlg in 'UCustomListDlg.pas' {formCustomListDialog},
+  UStationDlg in 'UStationDlg.pas' {formStationDialog},
+  Station in 'Station.pas',
+  UDxccSelectDlg in 'UDxccSelectDlg.pas' {formDxccSelectDialog};
 
 {$R *.res}
 

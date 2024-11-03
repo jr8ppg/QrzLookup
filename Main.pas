@@ -6,36 +6,34 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.IniFiles, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, System.Math,
   Vcl.ExtCtrls, Vcl.StdCtrls, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc,
-  Vcl.WinXCtrls, Vcl.Grids, JclDebug, Vcl.Menus,
+  Vcl.WinXCtrls, Vcl.Grids, JclDebug, Vcl.Menus, Winapi.WinSock,
   System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent,
-  WtUtils, Dxcc, RbnFilter;
+  WtUtils, Dxcc, RbnFilter, UOptions, UCustomListDlg, Station;
+
+const
+  MAXPACKETLEN = 2048;
+  WM_USER_N1MM_BROADCAST = (WM_USER + 101);
 
 type
   TformMain = class(TForm)
-    Panel1: TPanel;
-    editCallsign: TEdit;
-    Label1: TLabel;
-    buttonQuery: TButton;
     timerWtCheck: TTimer;
     StatusBar1: TStatusBar;
-    ToggleSwitch1: TToggleSwitch;
     StringGrid1: TStringGrid;
-    Label2: TLabel;
-    editInterval: TEdit;
-    updownInterval: TUpDown;
-    Label3: TLabel;
     NetHTTPClient1: TNetHTTPClient;
     NetHTTPRequest1: TNetHTTPRequest;
-    Panel2: TPanel;
-    radioLoggerLink0: TRadioButton;
-    radioLoggerLink1: TRadioButton;
-    radioLoggerLink2: TRadioButton;
-    radioLoggerLink3: TRadioButton;
     MainMenu1: TMainMenu;
     menuFile: TMenuItem;
     menuRbnTool: TMenuItem;
     N1: TMenuItem;
     menuExit: TMenuItem;
+    menuOptions: TMenuItem;
+    N2: TMenuItem;
+    Panel1: TPanel;
+    Label1: TLabel;
+    editCallsign: TEdit;
+    buttonQuery: TButton;
+    ToggleSwitch1: TToggleSwitch;
+    menuCustomList: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -46,39 +44,61 @@ type
     procedure ToggleSwitch1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure StringGrid1TopLeftChanged(Sender: TObject);
-    procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
-      Rect: TRect; State: TGridDrawState);
+    procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
     procedure FormResize(Sender: TObject);
     procedure httpConnected(Sender: TObject);
     procedure httpDisconnected(Sender: TObject);
     procedure editCallsignChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure checkUseWtClick(Sender: TObject);
-    procedure updownIntervalClick(Sender: TObject; Button: TUDBtnType);
-    procedure NetHTTPRequest1RequestError(const Sender: TObject;
-      const AError: string);
-    procedure NetHTTPRequest1RequestException(const Sender: TObject;
-      const AError: Exception);
-    procedure radioLoggerLink2Click(Sender: TObject);
-    procedure radioLoggerLink3Click(Sender: TObject);
+    procedure NetHTTPRequest1RequestError(const Sender: TObject; const AError: string);
+    procedure NetHTTPRequest1RequestException(const Sender: TObject; const AError: Exception);
     procedure menuRbnToolClick(Sender: TObject);
     procedure menuExitClick(Sender: TObject);
     procedure menuFileClick(Sender: TObject);
+    procedure StringGrid1MouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+    procedure StringGrid1MouseWheelUp(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+    procedure menuOptionsClick(Sender: TObject);
+    procedure menuCustomListClick(Sender: TObject);
+  protected
+    procedure ReadBroadcastPacket( var Message: TMessage ); message WM_USER_N1MM_BROADCAST;
   private
     { Private 宣言 }
     FWtUtils: TWtUtils;
-    FQrzComSessionKey: string;
-    FQrzUserId, FQrzPassword: string;
     FDxccList: TDxccList;
     FLogFileName: string;
     FQueryNow: Boolean;
-    FSite: Integer;
     FLastQueryTickCount: DWORD;
-    FKeepAliveMinute: DWORD;
+    FQrzComSessionKey: string;
 
+    // 設定項目
+    FSelectSite: Integer;
+    FKeepAliveMinute: Integer;
+    FUserId: array[0..1] of string;
+    FPassword: array[0..1] of string;
+    FLinkLogger: Integer;
+    FScanInterval: Integer;
+    FUdpPort: Integer;
+
+    // zLog
     m_zLogV28: Boolean;
     FZLogLoggerWnd: HWND;
+
+    // N1MM+
     FN1mmLoggerWnd: HWND;
+
+    // 表示用フォントサイズ
+    FInfoFontSize: Integer;
+    FLocalQuery: Boolean;
+
+    // UDPサーバー用
+    FUdpServer: TSocket;
+    FServerAddr: TSockAddrIn;
+    FClientAddr: TSockAddrIn;
+
+    // カスタムリスト
+    FCustomListFile: TStringList;
+    FCustomList: TStationList;
 
     function QrzComLogin(strUserID, strPassword: string; var strResult: string): Boolean;
     function QueryOneStation(strSessionKey: string; strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean; overload;
@@ -90,6 +110,12 @@ type
     function FindN1mmWindow(): HWND;
     function Find_zLog(): HWND;
     function Find_n1mm(): HWND;
+    procedure LoadSettings();
+    procedure SaveSettings();
+    procedure StartN1mmUdpServer();
+    procedure StopN1mmUdpServer();
+    function GetXmlValue(xml: string; tag: string): string;
+    procedure BuildCustomList();
   public
     { Public 宣言 }
     function QueryOneStation(strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean; overload;
@@ -97,6 +123,7 @@ type
     procedure GoZlogLookup();
     procedure GoN1mmLookup();
     procedure LogWrite(msg: string);
+    property DxccList: TDxccList read FDxccList;
   end;
 
 function IsDomestic(strCallsign: string): Boolean;
@@ -112,57 +139,26 @@ uses
   SelectZlog;
 
 procedure TformMain.FormCreate(Sender: TObject);
-var
-   ini: TIniFile;
-   x, y: Integer;
-   n: Integer;
 begin
    FWtUtils := TWtUtils.Create();
    FDxccList := TDxccList.Create();
    FDxccList.LoadFromResourceName(SysInit.HInstance, 'ID_DXCCLIST');
+   FCustomListFile := TStringList.Create();
+   FCustomListFile.StrictDelimiter := True;
+   FCustomList := TStationList.Create();
    FQueryNow := False;
+   FUdpServer := 0;
 
    FLogFileName := ExtractFilePath(Application.ExeName) +
                    ChangeFileExt(ExtractFileName(Application.ExeName), '') + '_' + FormatDateTime('yyyymmdd', Now) + '.log';
 
-   ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-   try
-      FSite := ini.ReadInteger('SETTINGS', 'SiteSelect', 0);
-      FLastQueryTickCount := GetTickCount();
+   LoadSettings();
 
-      x := ini.ReadInteger('SETTINGS', 'X', -1);
-      y := ini.ReadInteger('SETTINGS', 'Y', -1);
-      if (x > -1) and (y > -1) then begin
-         Left := x;
-         Top := y;
-         Position := poDesigned;
-      end
-      else begin
-         Position := poDefaultPosOnly;
-      end;
-
-      n := ini.ReadInteger('SETTINGS', 'ScanInterval', 500);
-      n := Min(Max(n, 100), 3000);
-      updownInterval.Position := n;
-      timerWtCheck.Interval := n;
-
-      n := ini.ReadInteger('SETTINGS', 'KeepAliveMinute', 0);
-      FKeepAliveMinute := n;
-
-      if FSite = 0 then begin
-         FQrzUserId := ini.ReadString('QRZ.COM', 'UserID', '');
-         FQrzPassword := ini.ReadString('QRZ.COM', 'Password', '');
-
-         Caption := 'QRZ.COM Lookup Tool';
-      end
-      else begin
-         FQrzUserId := ini.ReadString('QRZCQ.COM', 'UserID', '');
-         FQrzPassword := ini.ReadString('QRZCQ.COM', 'Password', '');
-
-         Caption := 'QRZCQ.COM Lookup Tool';
-      end;
-   finally
-      ini.Free();
+   if FSelectSite = 0 then begin
+      Caption := 'QRZ.COM Lookup Tool';
+   end
+   else begin
+      Caption := 'QRZCQ.COM Lookup Tool';
    end;
 
    StringGrid1.Cells[0, 0] := 'Country';
@@ -181,24 +177,18 @@ end;
 procedure TformMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
    LogWrite('*** QrzLookup stopped ***');
+   if FLinkLogger = 4 then begin
+      StopN1mmUdpServer();
+   end;
 end;
 
 procedure TformMain.FormDestroy(Sender: TObject);
-var
-   ini: TIniFile;
 begin
+   SaveSettings();
    FWtUtils.Free();
    FDxccList.Free();
-
-   ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
-   try
-      ini.WriteInteger('SETTINGS', 'X', Left);
-      ini.WriteInteger('SETTINGS', 'Y', Top);
-      ini.WriteInteger('SETTINGS', 'ScanInterval', updownInterval.Position);
-
-   finally
-      ini.Free();
-   end;
+   FCustomListFile.Free();
+   FCustomList.Free();
 end;
 
 procedure TformMain.FormResize(Sender: TObject);
@@ -236,11 +226,13 @@ var
    dwTick: DWORD;
    strCountry, strCQZone, strITUZone, strContinent, strState: string;
    dxcc: TDxccObject;
+   station: TStationInfo;
 begin
    if FQueryNow = True then begin
       Exit;
    end;
 
+   FLocalQuery := False;
    FQueryNow := True;
    try
    try
@@ -251,6 +243,26 @@ begin
 
       strCallsign := GetCallsign(strCallsign);
 
+      // ローカルクエリーから
+      station := FCustomList.ObjectOf(strCallsign);
+      if station <> nil then begin
+         ClearInfo();
+
+         StringGrid1.Cells[0, 1] := station.Country;
+         StringGrid1.Cells[1, 1] := station.Continent;
+         StringGrid1.Cells[2, 1] := station.CQZone;
+         StringGrid1.Cells[3, 1] := station.ITUZone;
+         StringGrid1.Cells[4, 1] := station.State;
+
+         FLocalQuery := True;
+         StatusBar1.Panels[0].Text := 'local query';
+
+         editCallsign.SelectAll();
+         editCallsign.SetFocus();
+         Exit;
+      end;
+
+      // ４文字未満はクエリーしない
       if Length(strCallsign) < 4 then begin
          Exit;
       end;
@@ -333,24 +345,37 @@ begin
    timerWtCheck.Enabled := False;
    try
    try
-      // Win-Test
-      if radioLoggerLink1.Checked = True then begin
-         if FWtUtils.IsWtPresent() = False then begin
-            radioLoggerLink0.Checked := True;
-            Exit;
+      case FLinkLogger of
+         // None
+         0: begin
+            //
          end;
 
-         GoWtLookup();
-      end;
+         // Win-Test
+         1: begin
+            if FWtUtils.IsWtPresent() = True then begin
+               GoWtLookup();
+            end;
+         end;
 
-      // zLog
-      if (radioLoggerLink2.Checked = True) and (FZlogLoggerWnd <> 0) then begin
-         GoZlogLookup();
-      end;
+         // zLog
+         2: begin
+            if FZlogLoggerWnd <> 0 then begin
+               GoZlogLookup();
+            end;
+         end;
 
-      // N1MM+
-      if (radioLoggerLink3.Checked = True) and (FN1mmLoggerWnd <> 0) then begin
-         GoN1mmLookup();
+         // N1MM+
+         3: begin
+            if FN1mmLoggerWnd <> 0 then begin
+               GoN1mmLookup();
+            end;
+         end;
+
+         // N1MM+ (UDP)
+         4: begin
+            //
+         end;
       end;
    except
       on E: Exception do begin
@@ -379,17 +404,25 @@ begin
    try
    try
       if ToggleSwitch1.State = tssOn then  begin
-         if (FQrzUserid = '') or (FQrzPassword = '') then begin
-            MessageBox(Handle, PChar('please enter the user id and password'), PChar(Application.Title), MB_OK or MB_ICONEXCLAMATION);
+         if (FUserid[FSelectSite] = '') or (FPassword[FSelectSite] = '') then begin
+            menuOptionsClick(nil);
+//            MessageBox(Handle, PChar('please enter the user id and password'), PChar(Application.Title), MB_OK or MB_ICONEXCLAMATION);
             ToggleSwitch1.State := tssOff;
             SetEnable(False);
             Exit;
          end;
 
-         if QrzComLogin(FQrzUserId, FQrzPassword, strResult) = True then begin
+         if QrzComLogin(FUserId[FSelectSite], FPassword[FSelectSite], strResult) = True then begin
             SetEnable(True);
             editCallsign.SetFocus();
             FQrzComSessionKey := strResult;
+
+            if FLinkLogger = 4 then begin
+               StartN1mmUdpServer();
+            end;
+
+            // カスタムリストを展開
+            BuildCustomList();
          end
          else begin
             ToggleSwitch1.State := tssOff;
@@ -402,7 +435,10 @@ begin
          ClearInfo();
          FQrzComSessionKey := '';
          SetEnable(False);
-         radioLoggerLink0.Checked := True;
+
+         if FLinkLogger = 4 then begin
+            StopN1mmUdpServer();
+         end;
       end;
    except
       on E: Exception do begin
@@ -415,11 +451,6 @@ begin
       Screen.Cursor := curBack;
       FQueryNow := False;
    end;
-end;
-
-procedure TformMain.updownIntervalClick(Sender: TObject; Button: TUDBtnType);
-begin
-   timerWtCheck.Interval := updownInterval.Position;
 end;
 
 function TformMain.QrzComLogin(strUserID, strPassword: string; var strResult: string): Boolean;
@@ -439,7 +470,7 @@ begin
    try
       LogWrite(' **** Enter - QrzComLogin() *** ');
 
-      if FSite = 0 then begin
+      if FSelectSite = 0 then begin
          strQuery := 'https://xmldata.qrz.com/xml/current/';
       end
       else begin
@@ -515,7 +546,7 @@ begin
       strITUZone := '';
       strState := '';
 
-      if FSite = 0 then begin
+      if FSelectSite = 0 then begin
          strQuery := 'https://xmldata.qrz.com/xml/current/';
       end
       else begin
@@ -596,22 +627,6 @@ begin
    Result := QueryOneStation(FQrzComSessionKey, strCallsign, strCountry, strCQZone, strITUZone, strState);
 end;
 
-procedure TformMain.radioLoggerLink2Click(Sender: TObject);
-begin
-   FZLogLoggerWnd := Find_zlog();
-   if FZLogLoggerWnd = 0 then begin
-      radioLoggerLink0.Checked := True;
-   end;
-end;
-
-procedure TformMain.radioLoggerLink3Click(Sender: TObject);
-begin
-   FN1mmLoggerWnd := Find_n1mm();
-   if FN1mmLoggerWnd = 0 then begin
-      radioLoggerLink0.Checked := True;
-   end;
-end;
-
 function TformMain.GetXmlNode(start_node: IXMLNode; tagname: string; name: string): IXMLNode;
 var
    i: integer;
@@ -663,12 +678,8 @@ begin
    editCallsign.Enabled := fEnable;
    buttonQuery.Enabled := fEnable;
    StringGrid1.Enabled := fEnable;
-   radioLoggerLink0.Enabled := fEnable;
-   radioLoggerLink1.Enabled := fEnable;
-   radioLoggerLink2.Enabled := fEnable;
-   radioLoggerLink3.Enabled := fEnable;
-   editInterval.Enabled := fEnable;
-   updownInterval.Enabled := fEnable;
+   menuOptions.Enabled := not fEnable;
+   menuCustomList.Enabled := not fEnable;
 end;
 
 procedure TformMain.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -690,8 +701,14 @@ begin
          Brush.Color := clWhite;
          Brush.Style := bsSolid;
          FillRect(Rect);
-         Font.Size := 30;
-         Font.Color := clBlack;
+         Font.Size := FInfoFontSize;
+
+         if FLocalQuery = True then begin
+            Font.Color := clGreen;
+         end
+         else begin
+            Font.Color := clBlack;
+         end;
       end;
 
       strText := StringGrid1.Cells[ACol, ARow];
@@ -707,6 +724,40 @@ begin
       y := ((Rect.Bottom - Rect.Top) - TextHeight(strText)) div 2;
 
       TextRect(Rect, Rect.Left + x, Rect.Top + y, strText);
+   end;
+end;
+
+procedure TformMain.StringGrid1MouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+var
+   font_size: Integer;
+begin
+   // CTRL+DOWNでフォントサイズDOWN
+   if GetAsyncKeyState(VK_CONTROL) < 0 then begin
+      font_size := FInfoFontSize;
+      Dec(font_size);
+      if font_size < 6 then begin
+         font_size := 6;
+      end;
+      FInfoFontSize := font_size;
+      StringGrid1.Refresh();
+      Handled := True;
+   end;
+end;
+
+procedure TformMain.StringGrid1MouseWheelUp(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+var
+   font_size: Integer;
+begin
+   // CTRL+UPでフォントサイズUP
+   if GetAsyncKeyState(VK_CONTROL) < 0 then begin
+      font_size := FInfoFontSize;
+      Inc(font_size);
+      if font_size > 50 then begin
+         font_size := 50;
+      end;
+      FInfoFontSize := font_size;
+      StringGrid1.Refresh();
+      Handled := True;
    end;
 end;
 
@@ -925,6 +976,83 @@ end;
 procedure TformMain.menuFileClick(Sender: TObject);
 begin
    menuRbnTool.Enabled := (FQrzComSessionKey <> '')
+end;
+
+procedure TformMain.menuOptionsClick(Sender: TObject);
+var
+   dlg: TformOptions;
+begin
+   dlg := TformOptions.Create(Self);
+   try
+      dlg.Site := FSelectSite;
+
+      dlg.UserId[0] := FUserId[0];
+      dlg.Password[0] := FPassword[0];
+      dlg.UserId[1] := FUserId[1];
+      dlg.Password[1] := FPassword[1];
+
+      dlg.KeepAliveMin := FKeepAliveMinute;
+      dlg.UdpPort := FUdpPort;
+
+      dlg.LinkLogger := FLinkLogger;
+      dlg.ScanInterval := FScanInterval;
+
+      if dlg.ShowModal() <> mrOK then begin
+         Exit;
+      end;
+
+      FSelectSite := dlg.Site;
+
+      FUserId[0] := dlg.UserId[0];
+      FPassword[0] := dlg.Password[0];
+      FUserId[1] := dlg.UserId[1];
+      FPassword[1] := dlg.Password[1];
+
+      FKeepAliveMinute := dlg.KeepAliveMin;
+      FUdpPort := dlg.UdpPort;
+
+      FLinkLogger := dlg.LinkLogger;
+
+      if FLinkLogger = 2 then begin
+         FZLogLoggerWnd := Find_zlog();
+         if FZLogLoggerWnd = 0 then begin
+            FLinkLogger := 0;
+         end;
+      end;
+
+      if FLinkLogger = 3 then begin
+         FN1mmLoggerWnd := Find_n1mm();
+         if FN1mmLoggerWnd = 0 then begin
+            FLinkLogger := 0;
+         end;
+      end;
+
+      FScanInterval := dlg.ScanInterval;
+
+      SaveSettings();
+   finally
+      dlg.Release();
+   end;
+end;
+
+procedure TformMain.menuCustomListClick(Sender: TObject);
+var
+   dlg: TformCustomListDialog;
+begin
+   dlg := TformCustomListDialog.Create(Self);
+   try
+      dlg.CustomListFile.Assign(FCustomListFile);
+
+      if dlg.ShowModal() <> mrOK then begin
+         Exit;
+      end;
+
+      FCustomListFile.Assign(dlg.CustomListFile);
+
+      SaveSettings();
+   finally
+      dlg.Release();
+   end;
 end;
 
 procedure TformMain.menuRbnToolClick(Sender: TObject);
@@ -1181,6 +1309,288 @@ begin
    end;
 
    Result := wnd;
+end;
+
+// ----------------------------------------------------------------------------
+
+procedure TformMain.LoadSettings();
+var
+   ini: TIniFile;
+   x, y: Integer;
+   w, h: Integer;
+   n: Integer;
+   fname: string;
+begin
+   ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+   try
+      FSelectSite := ini.ReadInteger('SETTINGS', 'SiteSelect', 0);
+      FLastQueryTickCount := GetTickCount();
+
+      x := ini.ReadInteger('SETTINGS', 'X', -1);
+      y := ini.ReadInteger('SETTINGS', 'Y', -1);
+      w := ini.ReadInteger('SETTINGS', 'W', -1);
+      h := ini.ReadInteger('SETTINGS', 'H', -1);
+      if (x > -1) and (y > -1) then begin
+         Left := x;
+         Top := y;
+         Position := poDesigned;
+      end
+      else begin
+         Position := poDefaultPosOnly;
+      end;
+
+      if w > -1 then begin
+         Width := w;
+      end;
+
+      if h > -1 then begin
+         Height := h;
+      end;
+
+      FInfoFontSize := ini.ReadInteger('SETTINGS', 'FontSize', 30);
+
+      FLinkLogger := ini.ReadInteger('SETTINGS', 'LinkLogger', 0);
+
+      n := ini.ReadInteger('SETTINGS', 'ScanInterval', 500);
+      n := Min(Max(n, 100), 3000);
+      FScanInterval := n;
+      timerWtCheck.Interval := n;
+
+      n := ini.ReadInteger('SETTINGS', 'KeepAliveMinute', 0);
+      FKeepAliveMinute := n;
+
+      FUserId[0] := ini.ReadString('QRZ.COM', 'UserID', '');
+      FPassword[0] := ini.ReadString('QRZ.COM', 'Password', '');
+      FUserId[1] := ini.ReadString('QRZCQ.COM', 'UserID', '');
+      FPassword[1] := ini.ReadString('QRZCQ.COM', 'Password', '');
+      FUdpPort := ini.ReadInteger('SETTINGS', 'UdpPort', 12060);
+
+      fname := ExtractFilePath(Application.ExeName) + 'customlist.txt';
+      if FileExists(fname) then begin
+         FCustomListFile.LoadFromFile(fname);
+      end;
+   finally
+      ini.Free();
+   end;
+end;
+
+procedure TformMain.SaveSettings();
+var
+   ini: TIniFile;
+   fname: string;
+begin
+   ini := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
+   try
+      ini.WriteInteger('SETTINGS', 'SiteSelect', FSelectSite);
+      ini.WriteInteger('SETTINGS', 'X', Left);
+      ini.WriteInteger('SETTINGS', 'Y', Top);
+      ini.WriteInteger('SETTINGS', 'W', Width);
+      ini.WriteInteger('SETTINGS', 'H', Height);
+      ini.WriteInteger('SETTINGS', 'FontSize', FInfoFontSize);
+      ini.WriteInteger('SETTINGS', 'ScanInterval', FScanInterval);
+      ini.WriteInteger('SETTINGS', 'KeepAliveMinute', FKeepAliveMinute);
+      ini.WriteInteger('SETTINGS', 'LinkLogger', FLinkLogger);
+      ini.WriteInteger('SETTINGS', 'UdpPort', FUdpPort);
+      ini.WriteString('QRZ.COM', 'UserID', FUserId[0]);
+      ini.WriteString('QRZ.COM', 'Password', FPassword[0]);
+      ini.WriteString('QRZCQ.COM', 'UserID', FUserId[1]);
+      ini.WriteString('QRZCQ.COM', 'Password', FPassword[1]);
+
+      fname := ExtractFilePath(Application.ExeName) + 'customlist.txt';
+      FCustomListFile.SaveToFile(fname);
+   finally
+      ini.Free();
+   end;
+end;
+
+// ----------------------------------------------------------------------------
+
+procedure TformMain.StartN1mmUdpServer();
+var
+   optval: Integer;
+   nResult: Integer;
+begin
+   // UDPソケットを準備
+   FUdpServer := Socket(AF_INET, SOCK_DGRAM, 0);
+   optval := 1;
+   SetSockOpt(FUdpServer, SOL_SOCKET, SO_REUSEADDR, @optval, SizeOf(Integer));
+
+   // アドレス情報
+   FServerAddr.sin_family := AF_INET;
+   FServerAddr.sin_addr.s_addr := htonl(INADDR_ANY);
+   FServerAddr.sin_port := htons(FUdpPort);
+
+   // ソケットにアドレス情報をバインド
+   Bind(FUdpServer, FServerAddr, SizeOf(TSockAddrIn) );
+
+   // 受信開始
+   nResult := WSAAsyncSelect(FUdpServer, Handle, WM_USER_N1MM_BROADCAST, FD_READ);
+   if nResult = SOCKET_ERROR then begin
+      StatusBar1.Panels[3].Text := 'UDPサーバーを開始できません errorcode=' + IntToStr(WSAGetLastError());
+   end;
+end;
+
+procedure TformMain.StopN1mmUdpServer();
+begin
+   if FUdpServer <> 0 then begin
+      CloseSocket(FUdpServer);
+      FUdpServer := 0;
+   end;
+end;
+
+procedure TformMain.ReadBroadcastPacket(var Message: TMessage);
+var
+   nResult: Integer;
+   nLen: Integer;
+   Buffer: array [0..MAXPACKETLEN-1] of AnsiChar;
+   info_utf8: UTF8String;
+   strCallsign: string;
+begin
+   // エラーがあったか確認
+   if WSAGetSelectError(Message.lParam) <> 0 then begin
+      StatusBar1.Panels[3].Text := 'WSAGetSelectError() errorcode=' + IntToStr(WSAGetLastError());
+      Exit;
+   end;
+
+   // 受信バッファクリア
+   ZeroMemory(@Buffer, SizeOf(Buffer));
+
+   // UDPから受信
+   nLen := SizeOf(TSockAddrIn);
+   nResult := RecvFrom(FUdpServer, Buffer, MAXPACKETLEN, 0, FClientAddr, nLen);
+   if nResult = SOCKET_ERROR then begin
+      StatusBar1.Panels[3].Text := 'RecvFrom() errorcode=' + IntToStr(WSAGetLastError());
+      Exit;
+   end;
+
+   // 受信データの処理
+   Buffer[nResult] := #0;
+
+   // XMLをパースする
+   info_utf8 := UTF8String(Buffer);
+
+   // contactinfo
+   //<?xml version="1.0" encoding="utf-8"?>
+   //<contactinfo>
+   //    <app>N1MM</app>
+   //    <contestname>CWOPS</contestname>
+   //    <contestnr>73</contestnr>
+   //    <timestamp>2020-01-17 16 :43:38</timestamp>
+   //    <mycall>W2XYZ</mycall>
+   //    <band>3.5</band>
+   //    <rxfreq>352519</rxfreq>
+   //    <txfreq>352519</txfreq>
+   //    <operator></operator>
+   //    <mode>CW</mode>
+   //    <call>WlAW</call>
+   //    <countryprefix>K</countryprefix>
+   //    <wpxprefix>Wl</wpxprefix>
+   //    <stationprefix>W2XYZ</stationprefix>
+   //    <continent>NA</continent>
+   //    <snt>599</snt>
+   //    <sntnr>5</sntnr>
+   //    <rcv>599</rcv>
+   //    <rcvnr>0</rcvnr>
+   //    <gridsquare></gridsquare>
+   //    <exchangel></exchangel>
+   //    <section></section>
+   //    <comment></comment>
+   //    <qth></qth>
+   //    <name></name>
+   //    <power></power>
+   //    <misctext></misctext>
+   //    <zone>0</zone>
+   //    <prec></prec>
+   //    <ck>0</ck>
+   //    <ismultiplierl>l</ismultiplierl>
+   //    <ismultiplier2>0</ismultiplier2>
+   //    <ismultiplier3>0</ismultiplier3>
+   //    <points>l</points>
+   //    <radionr>l</radionr>
+   //    <run1run2>1<run1run2>
+   //    <RoverLocation></RoverLocation>
+   //    <RadioInterfaced>l</RadioInterfaced>
+   //    <NetworkedCompNr>0</NetworkedCompNr>
+   //    <IsOriginal>False</IsOriginal>
+   //    <NetBiosName></NetBiosName>
+   //    <IsRunQSO>0</IsRunQSO>
+   //    <StationName>CONTEST-PC</StationName>
+   //    <ID>f9ff ac4f cd3e 479c a86e 137d f133 8531</ID>
+   //    <IsClaimedQso>1</IsClaimedQso>
+   //</contactinfo>
+   if Pos('<lookupinfo>', info_utf8) = 0 then begin
+      Exit;
+   end;
+
+   // コールサイン取得
+   strCallsign := GetXmlValue(info_utf8, 'call');
+   if strCallsign = '' then begin
+      Exit;
+   end;
+
+   // Query実行
+   editCallsign.Text := strCallsign;
+   buttonQueryClick(nil);
+end;
+
+//
+// XML風なので簡易にデータを取得する。
+//
+// 00000000011111111
+// 12345678901234567
+// <call>WlAW</call>
+//
+// in= 1 + 6 = 7
+// out = 11 - 7 = 4
+//
+function TformMain.GetXmlValue(xml: string; tag: string): string;
+var
+   tag_in: string;
+   tag_out: string;
+   Index_in: Integer;
+   Index_out: Integer;
+begin
+   tag_in := '<' + tag + '>';
+   tag_out := '</' + tag + '>';
+
+   Index_in := Pos(tag_in, xml) + Length(tag_in);
+
+   Index_out := Pos(tag_out, xml);
+
+   Result := Copy(xml, Index_in, Index_out - Index_in);
+end;
+
+procedure TformMain.BuildCustomList();
+var
+   i: Integer;
+   slLine: TStringList;
+   listitem: TListItem;
+   obj: TStationInfo;
+begin
+   slLine := TStringList.Create();
+   slLine.StrictDelimiter := True;
+   try
+      FCustomList.Clear();
+
+      for i := 0 to FCustomListFile.Count - 1 do begin
+         slLine.CommaText := FCustomListFile[i];
+
+         obj := TStationInfo.Create();
+         obj.Callsign := slLine[0];
+         obj.Country := slLine[1];
+         obj.Continent := slLine[2];
+         obj.CQZone := slLine[3];
+         obj.ITUZone := slLine[4];
+         obj.State := slLine[5];
+         obj.Comment := slLine[6];
+
+         FCustomList.Add(obj);
+      end;
+
+      FCustomList.Sort();
+   finally
+      slLine.Free();
+   end;
 end;
 
 // ----------------------------------------------------------------------------
