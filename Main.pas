@@ -8,7 +8,7 @@ uses
   Vcl.ExtCtrls, Vcl.StdCtrls, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc,
   Vcl.WinXCtrls, Vcl.Grids, JclDebug, Vcl.Menus, Winapi.WinSock,
   System.Net.URLClient, System.Net.HttpClient, System.Net.HttpClientComponent,
-  WtUtils, Dxcc, RbnFilter, UOptions, UCustomListDlg, Station;
+  WtUtils, Dxcc, RbnFilter, UOptions, UCustomListDlg, Station, Vcl.Buttons;
 
 const
   MAXPACKETLEN = 2048;
@@ -21,19 +21,19 @@ type
     StringGrid1: TStringGrid;
     NetHTTPClient1: TNetHTTPClient;
     NetHTTPRequest1: TNetHTTPRequest;
-    MainMenu1: TMainMenu;
-    menuFile: TMenuItem;
-    menuRbnTool: TMenuItem;
-    N1: TMenuItem;
-    menuExit: TMenuItem;
-    menuOptions: TMenuItem;
-    N2: TMenuItem;
     Panel1: TPanel;
     Label1: TLabel;
     editCallsign: TEdit;
     buttonQuery: TButton;
     ToggleSwitch1: TToggleSwitch;
+    buttonMenu: TSpeedButton;
+    popupMainMenu: TPopupMenu;
+    menuOptions: TMenuItem;
     menuCustomList: TMenuItem;
+    N3: TMenuItem;
+    menuRbnTool: TMenuItem;
+    N4: TMenuItem;
+    menuExit: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -60,6 +60,7 @@ type
     procedure StringGrid1MouseWheelUp(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
     procedure menuOptionsClick(Sender: TObject);
     procedure menuCustomListClick(Sender: TObject);
+    procedure buttonMenuClick(Sender: TObject);
   protected
     procedure ReadBroadcastPacket( var Message: TMessage ); message WM_USER_N1MM_BROADCAST;
   private
@@ -166,11 +167,13 @@ begin
    StringGrid1.Cells[2, 0] := 'CQ Zone';
    StringGrid1.Cells[3, 0] := 'ITU Zone';
    StringGrid1.Cells[4, 0] := 'State';
-   StringGrid1.ColWidths[0] := 300;
+   StringGrid1.Cells[5, 0] := 'Comment';
+   StringGrid1.ColWidths[0] := 240;
    StringGrid1.ColWidths[1] := 80;
    StringGrid1.ColWidths[2] := 80;
    StringGrid1.ColWidths[3] := 80;
    StringGrid1.ColWidths[4] := 80;
+   StringGrid1.ColWidths[5] := 240;
    StringGrid1.RowHeights[1] := 80;
 end;
 
@@ -196,15 +199,16 @@ var
    w: Integer;
    h: Integer;
 begin
-   w := (ClientWidth - 12) div 7;
+   w := (ClientWidth - 12) div 10;
    h := ClientHeight - (Panel1.Height + StringGrid1.RowHeights[0] + StatusBar1.Height);
    StringGrid1.ColWidths[0] := w * 3;
    StringGrid1.ColWidths[1] := w;
    StringGrid1.ColWidths[2] := w;
    StringGrid1.ColWidths[3] := w;
    StringGrid1.ColWidths[4] := w;
+   StringGrid1.ColWidths[5] := w * 3;
    StringGrid1.RowHeights[1] := h;
-   ClientWidth := w * 7 + 12;
+   ClientWidth := w * 10 + 12;
 end;
 
 procedure TformMain.FormShow(Sender: TObject);
@@ -218,6 +222,16 @@ begin
    if editCallsign.Enabled = True then begin
       editCallsign.SetFocus();
    end;
+end;
+
+procedure TformMain.buttonMenuClick(Sender: TObject);
+var
+   pt: TPoint;
+begin
+   pt.X := buttonMenu.Left;
+   pt.Y := buttonMenu.Top + buttonMenu.Height;
+   pt := Panel1.ClientToScreen(pt);
+   popupMainMenu.Popup(pt.X, pt.Y);
 end;
 
 procedure TformMain.buttonQueryClick(Sender: TObject);
@@ -253,6 +267,7 @@ begin
          StringGrid1.Cells[2, 1] := station.CQZone;
          StringGrid1.Cells[3, 1] := station.ITUZone;
          StringGrid1.Cells[4, 1] := station.State;
+         StringGrid1.Cells[5, 1] := station.Comment;
 
          FLocalQuery := True;
          StatusBar1.Panels[0].Text := 'local query';
@@ -296,6 +311,7 @@ begin
          StringGrid1.Cells[2, 1] := strCQZone;
          StringGrid1.Cells[3, 1] := strITUZone;
          StringGrid1.Cells[4, 1] := strState;
+         StringGrid1.Cells[5, 1] := '';
       end
       else begin
          StringGrid1.Cells[0, 1] := strCountry;
@@ -303,6 +319,7 @@ begin
          StringGrid1.Cells[2, 1] := '';
          StringGrid1.Cells[3, 1] := '';
          StringGrid1.Cells[4, 1] := '';
+         StringGrid1.Cells[5, 1] := '';
       end;
 
       dwTick := GetTickCount() - dwTick;
@@ -778,6 +795,7 @@ begin
    StringGrid1.Cells[2, 1] := '';
    StringGrid1.Cells[3, 1] := '';
    StringGrid1.Cells[4, 1] := '';
+   StringGrid1.Cells[5, 1] := '';
 end;
 
 function TformMain.GetCallsign(strCallsign: string): string;

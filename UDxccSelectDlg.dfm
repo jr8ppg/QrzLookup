@@ -23,6 +23,8 @@ object formDxccSelectDialog: TformDxccSelectDialog
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitTop = 300
+    ExplicitWidth = 492
     DesignSize = (
       496
       34)
@@ -36,6 +38,7 @@ object formDxccSelectDialog: TformDxccSelectDialog
       Default = True
       ModalResult = 1
       TabOrder = 0
+      ExplicitLeft = 168
     end
     object buttonCancel: TButton
       Left = 251
@@ -47,6 +50,7 @@ object formDxccSelectDialog: TformDxccSelectDialog
       Caption = #12461#12515#12531#12475#12523
       ModalResult = 2
       TabOrder = 1
+      ExplicitLeft = 247
     end
   end
   object ListView1: TListView
@@ -83,7 +87,11 @@ object formDxccSelectDialog: TformDxccSelectDialog
     RowSelect = True
     TabOrder = 1
     ViewStyle = vsReport
+    OnColumnClick = ListView1ColumnClick
+    OnCompare = ListView1Compare
     OnDblClick = ListView1DblClick
     OnSelectItem = ListView1SelectItem
+    ExplicitWidth = 492
+    ExplicitHeight = 300
   end
 end

@@ -2,17 +2,16 @@ object formMain: TformMain
   Left = 0
   Top = 0
   Caption = 'QRZ.COM Lookup Tool'
-  ClientHeight = 184
-  ClientWidth = 688
+  ClientHeight = 145
+  ClientWidth = 398
   Color = clBtnFace
   Constraints.MinHeight = 150
-  Constraints.MinWidth = 350
+  Constraints.MinWidth = 410
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
   Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
   Font.Style = []
-  Menu = MainMenu1
   OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
@@ -23,9 +22,10 @@ object formMain: TformMain
   object StringGrid1: TStringGrid
     Left = 0
     Top = 30
-    Width = 688
-    Height = 135
+    Width = 398
+    Height = 96
     Align = alClient
+    ColCount = 6
     FixedCols = 0
     RowCount = 2
     TabOrder = 1
@@ -33,14 +33,13 @@ object formMain: TformMain
     OnMouseWheelDown = StringGrid1MouseWheelDown
     OnMouseWheelUp = StringGrid1MouseWheelUp
     OnTopLeftChanged = StringGrid1TopLeftChanged
-    ExplicitTop = 41
     ExplicitWidth = 684
-    ExplicitHeight = 123
+    ExplicitHeight = 134
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 165
-    Width = 688
+    Top = 126
+    Width = 398
     Height = 19
     Panels = <
       item
@@ -65,17 +64,31 @@ object formMain: TformMain
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 688
+    Width = 398
     Height = 30
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitLeft = 8
+    ExplicitWidth = 688
+    DesignSize = (
+      398
+      30)
     object Label1: TLabel
       Left = 95
       Top = 7
       Width = 48
       Height = 15
       Caption = 'Callsign'
+    end
+    object buttonMenu: TSpeedButton
+      Left = 322
+      Top = 4
+      Width = 72
+      Height = 23
+      Anchors = [akTop, akRight]
+      Caption = #12513#12491#12517#12540
+      OnClick = buttonMenuClick
     end
     object editCallsign: TEdit
       Left = 149
@@ -134,36 +147,30 @@ object formMain: TformMain
     Left = 400
     Top = 60
   end
-  object MainMenu1: TMainMenu
-    AutoHotkeys = maManual
-    AutoLineReduction = maManual
-    Left = 528
-    Top = 80
-    object menuFile: TMenuItem
-      Caption = #27231#33021'(&F)'
-      OnClick = menuFileClick
-      object menuOptions: TMenuItem
-        Caption = #12458#12503#12471#12519#12531'(&O)'
-        OnClick = menuOptionsClick
-      end
-      object menuCustomList: TMenuItem
-        Caption = #12459#12473#12479#12512#12522#12473#12488'(&C)'
-        OnClick = menuCustomListClick
-      end
-      object N2: TMenuItem
-        Caption = '-'
-      end
-      object menuRbnTool: TMenuItem
-        Caption = 'RBN'#12487#12540#12479#12398#37325#35079#21066#38500'(&R)'
-        OnClick = menuRbnToolClick
-      end
-      object N1: TMenuItem
-        Caption = '-'
-      end
-      object menuExit: TMenuItem
-        Caption = #32066#20102'(&X)'
-        OnClick = menuExitClick
-      end
+  object popupMainMenu: TPopupMenu
+    Left = 224
+    Top = 96
+    object menuOptions: TMenuItem
+      Caption = #12458#12503#12471#12519#12531'(&O)'
+      OnClick = menuOptionsClick
+    end
+    object menuCustomList: TMenuItem
+      Caption = #12459#12473#12479#12512#12522#12473#12488'(&C)'
+      OnClick = menuCustomListClick
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object menuRbnTool: TMenuItem
+      Caption = 'RBN'#12487#12540#12479#12398#37325#35079#21066#38500'(&R)'
+      OnClick = menuRbnToolClick
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object menuExit: TMenuItem
+      Caption = #32066#20102'(&X)'
+      OnClick = menuExitClick
     end
   end
 end

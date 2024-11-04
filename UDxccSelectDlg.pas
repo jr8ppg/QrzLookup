@@ -17,8 +17,13 @@ type
     procedure ListView1SelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure ListView1DblClick(Sender: TObject);
+    procedure ListView1ColumnClick(Sender: TObject; Column: TListColumn);
+    procedure ListView1Compare(Sender: TObject; Item1, Item2: TListItem;
+      Data: Integer; var Compare: Integer);
   private
     { Private êÈåæ }
+    FPrevSortColumnNo: Integer;
+    FSortDirectionAsc: Boolean;
     FSelDxcc: TDxccObject;
   public
     { Public êÈåæ }
@@ -35,6 +40,8 @@ uses
 procedure TformDxccSelectDialog.FormCreate(Sender: TObject);
 begin
    FSelDxcc := nil;
+   FPrevSortColumnNo := -1;
+   FSortDirectionAsc := True;
 end;
 
 procedure TformDxccSelectDialog.FormShow(Sender: TObject);
@@ -57,6 +64,31 @@ begin
 
    ListView1.Selected := nil;
    buttonOK.Enabled := False;
+end;
+
+procedure TformDxccSelectDialog.ListView1ColumnClick(Sender: TObject; Column: TListColumn);
+begin
+   if FPrevSortColumnNo = Column.Index then begin
+      FSortDirectionAsc := Not FSortDirectionAsc;
+   end;
+
+   ListView1.CustomSort(nil, Column.Index);
+
+   FPrevSortColumnNo := Column.Index;
+end;
+
+procedure TformDxccSelectDialog.ListView1Compare(Sender: TObject; Item1, Item2: TListItem; Data: Integer; var Compare: Integer);
+begin
+   if Data = 0 then begin
+      Compare := StrToIntDef(Item1.Caption, 0) - StrToIntDef(Item2.Caption, 0);
+   end
+   else begin
+      Compare := CompareText(Item1.SubItems[Data - 1], Item2.SubItems[Data - 1]);
+   end;
+
+   if FSortDirectionAsc = False then begin
+      Compare := Compare * -1;
+   end;
 end;
 
 procedure TformDxccSelectDialog.ListView1DblClick(Sender: TObject);

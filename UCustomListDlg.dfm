@@ -24,8 +24,8 @@ object formCustomListDialog: TformCustomListDialog
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 745
-    ExplicitHeight = 442
+    ExplicitWidth = 742
+    ExplicitHeight = 335
     DesignSize = (
       746
       336)
@@ -73,10 +73,12 @@ object formCustomListDialog: TformCustomListDialog
       RowSelect = True
       TabOrder = 0
       ViewStyle = vsReport
+      OnColumnClick = ListView1ColumnClick
+      OnCompare = ListView1Compare
       OnDblClick = ListView1DblClick
       OnSelectItem = ListView1SelectItem
-      ExplicitWidth = 601
-      ExplicitHeight = 386
+      ExplicitWidth = 598
+      ExplicitHeight = 316
     end
     object buttonAdd: TButton
       Left = 618
@@ -87,6 +89,7 @@ object formCustomListDialog: TformCustomListDialog
       Caption = #36861#21152
       TabOrder = 1
       OnClick = buttonAddClick
+      ExplicitLeft = 614
     end
     object buttonEdit: TButton
       Left = 618
@@ -97,6 +100,7 @@ object formCustomListDialog: TformCustomListDialog
       Caption = #32232#38598
       TabOrder = 2
       OnClick = buttonEditClick
+      ExplicitLeft = 614
     end
     object buttonDelete: TButton
       Left = 618
@@ -107,6 +111,7 @@ object formCustomListDialog: TformCustomListDialog
       Caption = #21066#38500
       TabOrder = 3
       OnClick = buttonDeleteClick
+      ExplicitLeft = 614
     end
     object buttonOK: TButton
       Left = 618
@@ -118,7 +123,8 @@ object formCustomListDialog: TformCustomListDialog
       Default = True
       TabOrder = 4
       OnClick = buttonOKClick
-      ExplicitTop = 338
+      ExplicitLeft = 614
+      ExplicitTop = 268
     end
     object buttonCancel: TButton
       Left = 618
@@ -130,7 +136,8 @@ object formCustomListDialog: TformCustomListDialog
       Caption = #12461#12515#12531#12475#12523
       ModalResult = 2
       TabOrder = 5
-      ExplicitTop = 369
+      ExplicitLeft = 614
+      ExplicitTop = 299
     end
   end
 end

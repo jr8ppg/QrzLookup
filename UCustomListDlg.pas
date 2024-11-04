@@ -25,8 +25,13 @@ type
     procedure ListView1SelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure buttonOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ListView1ColumnClick(Sender: TObject; Column: TListColumn);
+    procedure ListView1Compare(Sender: TObject; Item1, Item2: TListItem;
+      Data: Integer; var Compare: Integer);
   private
     { Private êÈåæ }
+    FPrevSortColumnNo: Integer;
+    FSortDirectionAsc: Boolean;
     FCustomListFile: TStringList;
     procedure ListToListView();
     procedure ListViewToList();
@@ -43,6 +48,8 @@ procedure TformCustomListDialog.FormCreate(Sender: TObject);
 begin
    FCustomListFile := TStringList.Create();
    FCustomListFile.StrictDelimiter := True;
+   FPrevSortColumnNo := -1;
+   FSortDirectionAsc := True;
    ListView1.Items.Clear();
 end;
 
@@ -128,6 +135,31 @@ begin
       listitem.SubItems[5] := dlg.Comment;
    finally
       dlg.Release();
+   end;
+end;
+
+procedure TformCustomListDialog.ListView1ColumnClick(Sender: TObject; Column: TListColumn);
+begin
+   if FPrevSortColumnNo = Column.Index then begin
+      FSortDirectionAsc := Not FSortDirectionAsc;
+   end;
+
+   ListView1.CustomSort(nil, Column.Index);
+
+   FPrevSortColumnNo := Column.Index;
+end;
+
+procedure TformCustomListDialog.ListView1Compare(Sender: TObject; Item1, Item2: TListItem; Data: Integer; var Compare: Integer);
+begin
+   if Data = 0 then begin
+      Compare := CompareText(Item1.Caption, Item2.Caption);
+   end
+   else begin
+      Compare := CompareText(Item1.SubItems[Data - 1], Item2.SubItems[Data - 1]);
+   end;
+
+   if FSortDirectionAsc = False then begin
+      Compare := Compare * -1;
    end;
 end;
 
