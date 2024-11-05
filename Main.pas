@@ -200,7 +200,7 @@ var
    h: Integer;
 begin
    w := (ClientWidth - 12) div 10;
-   h := ClientHeight - (Panel1.Height + StringGrid1.RowHeights[0] + StatusBar1.Height);
+   h := (ClientHeight - (Panel1.Height + StringGrid1.RowHeights[0] + StatusBar1.Height + 8)) div 2;
    StringGrid1.ColWidths[0] := w * 3;
    StringGrid1.ColWidths[1] := w;
    StringGrid1.ColWidths[2] := w;
@@ -208,6 +208,7 @@ begin
    StringGrid1.ColWidths[4] := w;
    StringGrid1.ColWidths[5] := w * 3;
    StringGrid1.RowHeights[1] := h;
+   StringGrid1.RowHeights[2] := h;
    ClientWidth := w * 10 + 12;
 end;
 
@@ -241,6 +242,8 @@ var
    strCountry, strCQZone, strITUZone, strContinent, strState: string;
    dxcc: TDxccObject;
    station: TStationInfo;
+const
+   site_name: array[0..1] of string = ( 'QRZ.COM', 'QRZCQ.COM' );
 begin
    if FQueryNow = True then begin
       Exit;
@@ -255,34 +258,34 @@ begin
          Exit;
       end;
 
+      ClearInfo();
+
       strCallsign := GetCallsign(strCallsign);
 
       // ローカルクエリーから
       station := FCustomList.ObjectOf(strCallsign);
       if station <> nil then begin
-         ClearInfo();
-
-         StringGrid1.Cells[0, 1] := station.Country;
-         StringGrid1.Cells[1, 1] := station.Continent;
-         StringGrid1.Cells[2, 1] := station.CQZone;
-         StringGrid1.Cells[3, 1] := station.ITUZone;
-         StringGrid1.Cells[4, 1] := station.State;
-         StringGrid1.Cells[5, 1] := station.Comment;
-
-         FLocalQuery := True;
-         StatusBar1.Panels[0].Text := 'local query';
-
-         editCallsign.SelectAll();
-         editCallsign.SetFocus();
-         Exit;
+         StringGrid1.Cells[0, 2] := station.Country;
+         StringGrid1.Cells[1, 2] := station.Continent;
+         StringGrid1.Cells[2, 2] := station.CQZone;
+         StringGrid1.Cells[3, 2] := station.ITUZone;
+         StringGrid1.Cells[4, 2] := station.State;
+         StringGrid1.Cells[5, 2] := station.Comment;
+      end
+      else begin
+         StringGrid1.Cells[0, 2] := 'NO DATA';
+         StringGrid1.Cells[1, 2] := '';
+         StringGrid1.Cells[2, 2] := '';
+         StringGrid1.Cells[3, 2] := '';
+         StringGrid1.Cells[4, 2] := '';
+         StringGrid1.Cells[5, 2] := '';
       end;
 
       // ４文字未満はクエリーしない
       if Length(strCallsign) < 4 then begin
+         StringGrid1.Cells[0, 1] := '';
          Exit;
       end;
-
-      ClearInfo();
 
       dwTick := GetTickCount();
 
@@ -311,7 +314,7 @@ begin
          StringGrid1.Cells[2, 1] := strCQZone;
          StringGrid1.Cells[3, 1] := strITUZone;
          StringGrid1.Cells[4, 1] := strState;
-         StringGrid1.Cells[5, 1] := '';
+         StringGrid1.Cells[5, 1] := site_name[FSelectSite];
       end
       else begin
          StringGrid1.Cells[0, 1] := strCountry;
@@ -319,7 +322,7 @@ begin
          StringGrid1.Cells[2, 1] := '';
          StringGrid1.Cells[3, 1] := '';
          StringGrid1.Cells[4, 1] := '';
-         StringGrid1.Cells[5, 1] := '';
+         StringGrid1.Cells[5, 1] := site_name[FSelectSite];
       end;
 
       dwTick := GetTickCount() - dwTick;
@@ -714,18 +717,17 @@ begin
          Font.Size := 11;
          Font.Color := clBlack;
       end;
-      if ARow = 1 then begin
+      if ARow >= 1 then begin
          Brush.Color := clWhite;
          Brush.Style := bsSolid;
          FillRect(Rect);
          Font.Size := FInfoFontSize;
-
-         if FLocalQuery = True then begin
-            Font.Color := clGreen;
-         end
-         else begin
-            Font.Color := clBlack;
-         end;
+      end;
+      if ARow = 2 then begin
+         Font.Color := clGreen;
+      end
+      else begin
+         Font.Color := clBlack;
       end;
 
       strText := StringGrid1.Cells[ACol, ARow];
@@ -796,6 +798,12 @@ begin
    StringGrid1.Cells[3, 1] := '';
    StringGrid1.Cells[4, 1] := '';
    StringGrid1.Cells[5, 1] := '';
+   StringGrid1.Cells[0, 2] := '';
+   StringGrid1.Cells[1, 2] := '';
+   StringGrid1.Cells[2, 2] := '';
+   StringGrid1.Cells[3, 2] := '';
+   StringGrid1.Cells[4, 2] := '';
+   StringGrid1.Cells[5, 2] := '';
 end;
 
 function TformMain.GetCallsign(strCallsign: string): string;

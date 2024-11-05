@@ -27,14 +27,14 @@ object formMain: TformMain
     Align = alClient
     ColCount = 6
     FixedCols = 0
-    RowCount = 2
+    RowCount = 3
     TabOrder = 1
     OnDrawCell = StringGrid1DrawCell
     OnMouseWheelDown = StringGrid1MouseWheelDown
     OnMouseWheelUp = StringGrid1MouseWheelUp
     OnTopLeftChanged = StringGrid1TopLeftChanged
-    ExplicitWidth = 684
-    ExplicitHeight = 134
+    ExplicitWidth = 394
+    ExplicitHeight = 95
   end
   object StatusBar1: TStatusBar
     Left = 0
@@ -58,8 +58,8 @@ object formMain: TformMain
         Alignment = taCenter
         Width = 100
       end>
-    ExplicitTop = 164
-    ExplicitWidth = 684
+    ExplicitTop = 125
+    ExplicitWidth = 394
   end
   object Panel1: TPanel
     Left = 0
@@ -69,8 +69,7 @@ object formMain: TformMain
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitLeft = 8
-    ExplicitWidth = 688
+    ExplicitWidth = 394
     DesignSize = (
       398
       30)
