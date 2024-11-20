@@ -3,7 +3,7 @@ object formOptions: TformOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = #12458#12503#12471#12519#12531
-  ClientHeight = 315
+  ClientHeight = 404
   ClientWidth = 577
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,14 +18,14 @@ object formOptions: TformOptions
   TextHeight = 12
   object Panel1: TPanel
     Left = 0
-    Top = 273
+    Top = 362
     Width = 577
     Height = 42
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 4
-    ExplicitTop = 400
-    ExplicitWidth = 628
+    ExplicitTop = 272
+    ExplicitWidth = 573
     DesignSize = (
       577
       42)
@@ -39,7 +39,7 @@ object formOptions: TformOptions
       Default = True
       ModalResult = 1
       TabOrder = 0
-      ExplicitLeft = 465
+      ExplicitLeft = 410
     end
     object buttonCancel: TButton
       Left = 493
@@ -51,7 +51,7 @@ object formOptions: TformOptions
       Caption = #12461#12515#12531#12475#12523
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 544
+      ExplicitLeft = 489
     end
   end
   object groupSelectSite: TGroupBox
@@ -265,6 +265,32 @@ object formOptions: TformOptions
       Width = 200
       Height = 20
       TabOrder = 1
+    end
+  end
+  object GroupBox1: TGroupBox
+    Left = 8
+    Top = 273
+    Width = 329
+    Height = 80
+    Caption = '"/"'#12364#12354#12427#22580#21512#12398#20966#29702
+    TabOrder = 5
+    object radioQueryOption1: TRadioButton
+      Left = 16
+      Top = 24
+      Width = 209
+      Height = 17
+      Caption = #12467#12540#12523#12469#12452#12531#26412#20307#12391#21839#12356#21512#12431#12379#12377#12427
+      TabOrder = 0
+    end
+    object radioQueryOption2: TRadioButton
+      Left = 16
+      Top = 47
+      Width = 209
+      Height = 17
+      Caption = #12381#12398#12414#12414#21839#12356#21512#12431#12379#12377#12427
+      Checked = True
+      TabOrder = 1
+      TabStop = True
     end
   end
 end

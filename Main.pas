@@ -101,6 +101,9 @@ type
     FCustomListFile: TStringList;
     FCustomList: TStationList;
 
+    // QueryOption
+    FQueryOption: Integer;
+
     function QrzComLogin(strUserID, strPassword: string; var strResult: string): Boolean;
     function QueryOneStation(strSessionKey: string; strCallsign: string; var strCountry, strCQZone, strITUZone, strState: string): Boolean; overload;
     function GetXmlNode(start_node: IXMLNode; tagname: string; name: string): IXMLNode;
@@ -260,7 +263,9 @@ begin
 
       ClearInfo();
 
-      strCallsign := GetCallsign(strCallsign);
+      if FQueryOption = 0 then begin
+         strCallsign := GetCallsign(strCallsign);
+      end;
 
       // ローカルクエリーから
       station := FCustomList.ObjectOf(strCallsign);
@@ -836,7 +841,9 @@ begin
    try
       strCallsign := FWtUtils.GetCallsign();
 
-      strCallsign := GetCallsign(strCallsign);
+      if FQueryOption = 0 then begin
+         strCallsign := GetCallsign(strCallsign);
+      end;
 
       if editCallsign.Text <> strCallsign then begin
          editCallsign.Text := strCallsign;
@@ -893,7 +900,9 @@ begin
 
       strCallsign := szWindowText;
 
-      strCallsign := GetCallsign(strCallsign);
+      if FQueryOption = 0 then begin
+         strCallsign := GetCallsign(strCallsign);
+      end;
 
       if editCallsign.Text <> strCallsign then begin
          editCallsign.Text := strCallsign;
@@ -943,7 +952,9 @@ begin
       strText := PChar(@szWindowText);
       strCallsign := strText;
 
-      strCallsign := GetCallsign(strCallsign);
+      if FQueryOption = 0 then begin
+         strCallsign := GetCallsign(strCallsign);
+      end;
 
       if editCallsign.Text <> strCallsign then begin
          editCallsign.Text := strCallsign;
@@ -1023,6 +1034,8 @@ begin
       dlg.LinkLogger := FLinkLogger;
       dlg.ScanInterval := FScanInterval;
 
+      dlg.QueryOption := FQueryOption;
+
       if dlg.ShowModal() <> mrOK then begin
          Exit;
       end;
@@ -1054,6 +1067,8 @@ begin
       end;
 
       FScanInterval := dlg.ScanInterval;
+
+      FQueryOption := dlg.QueryOption;
 
       SaveSettings();
    finally
@@ -1390,6 +1405,7 @@ begin
       FUserId[1] := ini.ReadString('QRZCQ.COM', 'UserID', '');
       FPassword[1] := ini.ReadString('QRZCQ.COM', 'Password', '');
       FUdpPort := ini.ReadInteger('SETTINGS', 'UdpPort', 12060);
+      FQueryOption := ini.ReadInteger('SETTINGS', 'QueryOption', 1);
 
       fname := ExtractFilePath(Application.ExeName) + 'customlist.txt';
       if FileExists(fname) then begin
@@ -1417,6 +1433,7 @@ begin
       ini.WriteInteger('SETTINGS', 'KeepAliveMinute', FKeepAliveMinute);
       ini.WriteInteger('SETTINGS', 'LinkLogger', FLinkLogger);
       ini.WriteInteger('SETTINGS', 'UdpPort', FUdpPort);
+      ini.WriteInteger('SETTINGS', 'QueryOption', FQueryOption);
       ini.WriteString('QRZ.COM', 'UserID', FUserId[0]);
       ini.WriteString('QRZ.COM', 'Password', FPassword[0]);
       ini.WriteString('QRZCQ.COM', 'UserID', FUserId[1]);

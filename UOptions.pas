@@ -39,6 +39,9 @@ type
     radioLinkLogger4: TRadioButton;
     Label9: TLabel;
     editUdpPort: TEdit;
+    GroupBox1: TGroupBox;
+    radioQueryOption1: TRadioButton;
+    radioQueryOption2: TRadioButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -58,6 +61,8 @@ type
     function GetScanInterval(): Integer;
     procedure SetUdpPort(v: Integer);
     function GetUdpPort(): Integer;
+    procedure SetQueryOption(v: Integer);
+    function GetQueryOption(): Integer;
   public
     { Public êÈåæ }
     property Site: Integer read GetSite write SetSite;
@@ -67,6 +72,7 @@ type
     property LinkLogger: Integer read GetLinkLogger write SetLinkLogger;
     property ScanInterval: Integer read GetScanInterval write SetScanInterval;
     property UdpPort: Integer read GetUdpPort write SetUdpPort;
+    property QueryOption: Integer read GetQueryOption write SetQueryOption;
   end;
 
 implementation
@@ -201,6 +207,26 @@ end;
 function TformOptions.GetUdpPort(): Integer;
 begin
    Result := StrToIntDef(editUdpPort.Text, 12060);
+end;
+
+procedure TformOptions.SetQueryOption(v: Integer);
+begin
+   if v = 0 then begin
+      radioQueryOption1.Checked := True;
+   end
+   else begin
+      radioQueryOption2.Checked := True;
+   end;
+end;
+
+function TformOptions.GetQueryOption(): Integer;
+begin
+   if radioQueryOption1.Checked = True then begin
+      Result := 0;
+   end
+   else begin
+      Result := 1;
+   end;
 end;
 
 end.
