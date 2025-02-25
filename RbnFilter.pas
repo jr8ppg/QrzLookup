@@ -56,14 +56,26 @@ type
     radioDxCtyDat: TRadioButton;
     radioDeZone: TRadioButton;
     radioDxZone: TRadioButton;
+    GroupBox5: TGroupBox;
+    checkDePfxFilter: TCheckBox;
+    editDePfxFilter: TEdit;
+    checkDxPfxFilter: TCheckBox;
+    editDxPfxFilter: TEdit;
+    checkDxContFilter: TCheckBox;
+    editDxContFilter: TEdit;
+    checkDeContFilter: TCheckBox;
+    editDeContFilter: TEdit;
     procedure buttonStartClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure buttonFileRefClick(Sender: TObject);
-    procedure editInputFileNameChange(Sender: TObject);
     function GetZone(strCallsign: string; fQrzlookup: Boolean): string;
     procedure FormDestroy(Sender: TObject);
     procedure radioDxDeClick(Sender: TObject);
     procedure buttonCloseClick(Sender: TObject);
+    procedure checkDePfxFilterClick(Sender: TObject);
+    procedure checkDxPfxFilterClick(Sender: TObject);
+    procedure checkDxContFilterClick(Sender: TObject);
+    procedure checkDeContFilterClick(Sender: TObject);
   private
     { Private 宣言 }
     FQrzComLookup: TDictionary<string, string>;
@@ -105,12 +117,34 @@ begin
 end;
 
 procedure TformRbnFilter.buttonFileRefClick(Sender: TObject);
+var
+   strExt: string;
+   strFiltered: string;
+   slFiles: TStringList;
+   filename: string;
 begin
    if OpenDialog1.Execute(Self.Handle) <> True then begin
       Exit;
    end;
 
-   editInputFileName.Text := OpenDialog1.FileName;
+   editInputFileName.Text := OpenDialog1.Files.CommaText;
+   if editInputFileName.Text = '' then begin
+      Exit;
+   end;
+
+   slFiles := TStringList.Create();
+   try
+      slFiles.CommaText := editInputFileName.Text;
+
+      filename := slFiles[0];
+      strExt := ExtractFileExt(filename);
+      strFiltered := ExtractFilePath(filename) + ExtractFileName(filename);
+      strFiltered := StringReplace(strFiltered, strExt, '', [rfReplaceAll]);
+      strFiltered := strFiltered + '_filtered' + strExt;
+      editOutputFileName.Text := strFiltered;
+   finally
+      slFiles.Free();
+   end;
 end;
 
 procedure TformRbnFilter.radioDxDeClick(Sender: TObject);
@@ -120,10 +154,15 @@ end;
 
 procedure TformRbnFilter.buttonStartClick(Sender: TObject);
 var
+   slFiles: TStringList;
    slFile: TStringList;
    slLine: TStringList;
    slFiltered: TStringList;
-   i: Integer;
+   slDePfxFilter: TStringList;
+   slDeContFilter: TStringList;
+   slDxPfxFilter: TStringList;
+   slDxContFilter: TStringList;
+   i, j, k: Integer;
    nColumnCount: Integer;
    list: TDictionary<string, string>;
    key: string;
@@ -132,11 +171,18 @@ var
    de_zone: string;
    dx_zone: string;
    progress: TformProgress;
+   nOK: Integer;
+   filename: string;
 begin
+   slFiles := TStringList.Create();
    slFile := TStringList.Create();
    slLine := TStringList.Create();
    slLine.StrictDelimiter := True;
    slFiltered := TStringList.Create();
+   slDePfxFilter := TStringList.Create();
+   slDeContFilter := TStringList.Create();
+   slDxPfxFilter := TStringList.Create();
+   slDxContFilter := TStringList.Create();
    list := TDictionary<string, string>.Create();
    progress := TformProgress.Create(Self);
 //   Screen.Cursor := crHourglass;
@@ -167,54 +213,122 @@ begin
          nDxCompare := 13;    // de_zone
       end;
 
-      slFile.LoadFromFile(editInputFileName.Text);
+      slFiles.CommaText := editInputFileName.Text;
+      for k := 0 to slFiles.Count - 1 do begin
+         filename := slFiles[k];
 
-      progress.Title := '';
-      progress.Text := '';
-      progress.Show();
-      Enabled := False;
+         slFile.LoadFromFile(filename);
 
-      nColumnCount := 0;
-      for i := 0 to slFile.Count - 1 do begin
-         slLine.CommaText := Trim(slFile[i]);
+         progress.Title := ExtractFileName(filename);
+         progress.Text := '';
+         progress.Show();
+         Enabled := False;
 
-         if i = 0 then begin
-            nColumnCount := slLine.Count;
+         slDePfxFilter.CommaText := editDePfxFilter.Text;
+         slDeContFilter.CommaText := editDeContFilter.Text;
+         slDxPfxFilter.CommaText := editDxPfxFilter.Text;
+         slDxContFilter.CommaText := editDxContFilter.Text;
 
-            slLine.Add('de_zone');
-            slLine.Add('dx_zone');
-            slFiltered.Add(slLine.CommaText);
-         end
-         else begin
-            if slLine.Count <> nColumnCount then begin
-               Continue;
-            end;
+         nColumnCount := 0;
+         for i := 0 to slFile.Count - 1 do begin
+            slLine.CommaText := Trim(slFile[i]);
 
-            // ZONE情報を追加する
-            de_zone := GetZone(slLine[0], radioDeQrzCom.Checked);
-            dx_zone := GetZone(slLine[5], radioDxQrzCom.Checked);
-            slLine.Add(de_zone);
-            slLine.Add(dx_zone);
+            if i = 0 then begin
+               nColumnCount := slLine.Count;
 
-            progress.Title := 'DE=' + slLine[0] + ' DX=' + slLine[5];
-            progress.Text := IntToStr(i + 1) + '/' + IntToStr(slFile.Count);
-            progress.SetProgressData(i + 1, slFile.Count);
-            Application.ProcessMessages();
+               if k = 0 then begin
+                  slLine.Add('de_zone');
+                  slLine.Add('dx_zone');
+                  slFiltered.Add(slLine.CommaText);
+               end;
+            end
+            else begin
+               if slLine.Count <> nColumnCount then begin
+                  Continue;
+               end;
 
-            if progress.Abort = True then begin
-               Break;
-            end;
+               // DE_PFXフィルター
+               if checkDePfxFilter.Checked = True then begin
+                  nOK := 0;
+                  for j := 0 to slDePfxFilter.Count - 1 do begin
+                     if (slLine[1] = slDePfxFilter[j]) then begin
+                        Inc(nOK);
+                     end;
+                  end;
 
-            // 0        1      2       3    4    5  6      7       8    9  10   11    12      13      14
-            // callsign,de_pfx,de_cont,freq,band,dx,dx_pfx,dx_cont,mode,db,date,speed,tx_mode,de_zone,dx_zone
+                  if nOK = 0 then begin
+                     Continue;
+                  end;
+               end;
 
-            // 1234567890123456
-            // 2023-11-25 00:00:00
-            key := slLine[5] + slLine[4] + slLine[nDxCompare] + Copy(slLine[10], 1, nDateCompare);
+               // DE_CONTフィルター
+               if checkDeContFilter.Checked = True then begin
+                  nOK := 0;
+                  for j := 0 to slDeContFilter.Count - 1 do begin
+                     if (slLine[2] = slDeContFilter[j]) then begin
+                        Inc(nOK);
+                     end;
+                  end;
 
-            if list.ContainsKey(key) = False then begin
-               list.Add(key, slLine.CommaText);
-               slFiltered.Add(slLine.CommaText);
+                  if nOK = 0 then begin
+                     Continue;
+                  end;
+               end;
+
+               // DX_PFXフィルター
+               if checkDxPfxFilter.Checked = True then begin
+                  nOK := 0;
+                  for j := 0 to slDxPfxFilter.Count - 1 do begin
+                     if (slLine[6] = slDxPfxFilter[j]) then begin
+                        Inc(nOK);
+                     end;
+                  end;
+
+                  if nOK = 0 then begin
+                     Continue;
+                  end;
+               end;
+
+               // DX_CONTフィルター
+               if checkDxContFilter.Checked = True then begin
+                  nOK := 0;
+                  for j := 0 to slDxContFilter.Count - 1 do begin
+                     if (slLine[7] = slDxContFilter[j]) then begin
+                        Inc(nOK);
+                     end;
+                  end;
+
+                  if nOK = 0 then begin
+                     Continue;
+                  end;
+               end;
+
+               // ZONE情報を追加する
+               de_zone := GetZone(slLine[0], radioDeQrzCom.Checked);
+               dx_zone := GetZone(slLine[5], radioDxQrzCom.Checked);
+               slLine.Add(de_zone);
+               slLine.Add(dx_zone);
+
+               progress.Title := ExtractFileName(filename) + ' DE=' + slLine[0] + ' DX=' + slLine[5];
+               progress.Text := IntToStr(i + 1) + '/' + IntToStr(slFile.Count);
+               progress.SetProgressData(i + 1, slFile.Count);
+               Application.ProcessMessages();
+
+               if progress.Abort = True then begin
+                  Break;
+               end;
+
+               // 0        1      2       3    4    5  6      7       8    9  10   11    12      13      14
+               // callsign,de_pfx,de_cont,freq,band,dx,dx_pfx,dx_cont,mode,db,date,speed,tx_mode,de_zone,dx_zone
+
+               // 1234567890123456
+               // 2023-11-25 00:00:00
+               key := slLine[5] + slLine[4] + slLine[nDxCompare] + Copy(slLine[10], 1, nDateCompare);
+
+               if list.ContainsKey(key) = False then begin
+                  list.Add(key, slLine.CommaText);
+                  slFiltered.Add(slLine.CommaText);
+               end;
             end;
          end;
       end;
@@ -226,27 +340,36 @@ begin
    finally
       progress.Release();
 //      Screen.Cursor := crDefault;
+      slFiles.Free();
       slFile.Free();
       slLine.Free();
       slFiltered.Free();
+      slDePfxFilter.Free();
+      slDeContFilter.Free();
+      slDxPfxFilter.Free();
+      slDxContFilter.Free();
       list.Free();
    end;
 end;
 
-procedure TformRbnFilter.editInputFileNameChange(Sender: TObject);
-var
-   strExt: string;
-   strFiltered: string;
+procedure TformRbnFilter.checkDeContFilterClick(Sender: TObject);
 begin
-   if editInputFileName.Text = '' then begin
-      Exit;
-   end;
+   editDeContFilter.Enabled := checkDeContFilter.Checked;
+end;
 
-   strExt := ExtractFileExt(editInputFileName.Text);
-   strFiltered := ExtractFilePath(editInputFileName.Text) + ExtractFileName(editInputFileName.Text);
-   strFiltered := StringReplace(strFiltered, strExt, '', [rfReplaceAll]);
-   strFiltered := strFiltered + '_filtered' + strExt;
-   editOutputFileName.Text := strFiltered;
+procedure TformRbnFilter.checkDePfxFilterClick(Sender: TObject);
+begin
+   editDePfxFilter.Enabled := checkDePfxFilter.Checked;
+end;
+
+procedure TformRbnFilter.checkDxContFilterClick(Sender: TObject);
+begin
+   editDxContFilter.Enabled := checkDxContFilter.Checked;
+end;
+
+procedure TformRbnFilter.checkDxPfxFilterClick(Sender: TObject);
+begin
+   editDxPfxFilter.Enabled := checkDxPfxFilter.Checked;
 end;
 
 function TformRbnFilter.GetZone(strCallsign: string; fQrzlookup: Boolean): string;
